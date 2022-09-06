@@ -3,27 +3,29 @@ ByggernKybInf.elf:     file format elf32-avr
 
 Sections:
 Idx Name          Size      VMA       LMA       File off  Algn
-  0 .data         00000000  00800100  00800100  000000ee  2**0
+  0 .data         00000000  00800100  00800100  00000106  2**0
                   CONTENTS, ALLOC, LOAD, DATA
-  1 .text         0000009a  00000000  00000000  00000054  2**1
+  1 .text         000000b2  00000000  00000000  00000054  2**1
                   CONTENTS, ALLOC, LOAD, READONLY, CODE
-  2 .comment      00000030  00000000  00000000  000000ee  2**0
+  2 .comment      00000030  00000000  00000000  00000106  2**0
                   CONTENTS, READONLY
-  3 .note.gnu.avr.deviceinfo 0000003c  00000000  00000000  00000120  2**2
+  3 .note.gnu.avr.deviceinfo 0000003c  00000000  00000000  00000138  2**2
                   CONTENTS, READONLY
-  4 .debug_aranges 00000020  00000000  00000000  0000015c  2**0
+  4 .debug_aranges 00000050  00000000  00000000  00000174  2**0
                   CONTENTS, READONLY, DEBUGGING
-  5 .debug_info   00000658  00000000  00000000  0000017c  2**0
+  5 .debug_info   00000774  00000000  00000000  000001c4  2**0
                   CONTENTS, READONLY, DEBUGGING
-  6 .debug_abbrev 000005d6  00000000  00000000  000007d4  2**0
+  6 .debug_abbrev 0000068c  00000000  00000000  00000938  2**0
                   CONTENTS, READONLY, DEBUGGING
-  7 .debug_line   000001ef  00000000  00000000  00000daa  2**0
+  7 .debug_line   0000029f  00000000  00000000  00000fc4  2**0
                   CONTENTS, READONLY, DEBUGGING
-  8 .debug_frame  00000024  00000000  00000000  00000f9c  2**2
+  8 .debug_frame  00000068  00000000  00000000  00001264  2**2
                   CONTENTS, READONLY, DEBUGGING
-  9 .debug_str    0000033b  00000000  00000000  00000fc0  2**0
+  9 .debug_str    00000382  00000000  00000000  000012cc  2**0
                   CONTENTS, READONLY, DEBUGGING
- 10 .debug_ranges 00000010  00000000  00000000  000012fb  2**0
+ 10 .debug_loc    00000026  00000000  00000000  0000164e  2**0
+                  CONTENTS, READONLY, DEBUGGING
+ 11 .debug_ranges 00000030  00000000  00000000  00001674  2**0
                   CONTENTS, READONLY, DEBUGGING
 
 Disassembly of section .text:
@@ -65,32 +67,67 @@ Disassembly of section .text:
   76:	d4 e0       	ldi	r29, 0x04	; 4
   78:	de bf       	out	0x3e, r29	; 62
   7a:	cd bf       	out	0x3d, r28	; 61
-  7c:	0e 94 44 00 	call	0x88	; 0x88 <main>
-  80:	0c 94 4b 00 	jmp	0x96	; 0x96 <_exit>
+  7c:	0e 94 4f 00 	call	0x9e	; 0x9e <main>
+  80:	0c 94 57 00 	jmp	0xae	; 0xae <_exit>
 
 00000084 <__bad_interrupt>:
   84:	0c 94 00 00 	jmp	0	; 0x0 <__vectors>
 
-00000088 <main>:
-{
-    /* Replace with your application code */
-    while(1) 
-	{
-		// Set PC0 to 1
-		PORTC |= 1;
-  88:	85 b3       	in	r24, 0x15	; 21
-  8a:	81 60       	ori	r24, 0x01	; 1
-  8c:	85 bb       	out	0x15, r24	; 21
+00000088 <UART_init>:
+
+#include <avr/io.h>
+
+void UART_init(unsigned int ubrr) {
+	// set baud rate
+	UBRR0H = (unsigned char) (ubrr>>8);
+  88:	90 bd       	out	0x20, r25	; 32
+	UBRR0L = (unsigned char) ubrr;
+  8a:	89 b9       	out	0x09, r24	; 9
+	
+	// enable receiver and transmitter
+	UCSR0B = (1<<RXEN0) | (1<<TXEN0);
+  8c:	88 e1       	ldi	r24, 0x18	; 24
+  8e:	8a b9       	out	0x0a, r24	; 10
+	
+	// set frame format
+	UCSR0C = (1<<URSEL0) | (1<<USBS0) | (3<<UCSZ00);
+  90:	8e e8       	ldi	r24, 0x8E	; 142
+  92:	80 bd       	out	0x20, r24	; 32
+  94:	08 95       	ret
+
+00000096 <UART_Transmit>:
+}
+
+void UART_Transmit(unsigned char data) {
+	// wait for empty transmit buffer
+	while (!(UCSR0A & (1<<UDRE0))) {}
+  96:	5d 9b       	sbis	0x0b, 5	; 11
+  98:	fe cf       	rjmp	.-4      	; 0x96 <UART_Transmit>
 		
-		// Set PC0 to 0
-		PORTC &= ~1;
-  8e:	85 b3       	in	r24, 0x15	; 21
-  90:	8e 7f       	andi	r24, 0xFE	; 254
-  92:	85 bb       	out	0x15, r24	; 21
-  94:	f9 cf       	rjmp	.-14     	; 0x88 <main>
+	// put data into buffer, sends the data
+	UDR0 = data;
+  9a:	8c b9       	out	0x0c, r24	; 12
+  9c:	08 95       	ret
 
-00000096 <_exit>:
-  96:	f8 94       	cli
+0000009e <main>:
+#define COMPUTED_UBRR FOSC/16/BAUD-1
 
-00000098 <__stop_program>:
-  98:	ff cf       	rjmp	.-2      	; 0x98 <__stop_program>
+#include <stdio.h>
+
+int main(void) {
+	UART_init(COMPUTED_UBRR);
+  9e:	8f e1       	ldi	r24, 0x1F	; 31
+  a0:	90 e0       	ldi	r25, 0x00	; 0
+  a2:	0e 94 44 00 	call	0x88	; 0x88 <UART_init>
+	//fdevopen(UART_Transmit, UART_Receive);
+	while (1) {
+		UART_Transmit('0');
+  a6:	80 e3       	ldi	r24, 0x30	; 48
+  a8:	0e 94 4b 00 	call	0x96	; 0x96 <UART_Transmit>
+  ac:	fc cf       	rjmp	.-8      	; 0xa6 <main+0x8>
+
+000000ae <_exit>:
+  ae:	f8 94       	cli
+
+000000b0 <__stop_program>:
+  b0:	ff cf       	rjmp	.-2      	; 0xb0 <__stop_program>

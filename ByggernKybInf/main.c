@@ -1,24 +1,29 @@
 /*
- * ByggernKybInf.c
+ * main.c
  *
- * Created: 02.09.2022 14:26:58
- * Author : thomahl
+ * Created: 06.09.2022 12:55:30
+ *  Author: thomahl
  */ 
 
-#include <avr/io.h>
-#include <avr/sleep.h>
+#include "drivers/uart.h"
 
 
-int main(void)
-{
-    /* Replace with your application code */
-    while(1) 
-	{
-		// Set PC0 to 1
-		PORTC |= 1;
+#define FOSC 4915200
+#define BAUD 9600
+#define COMPUTED_UBRR FOSC/16/BAUD-1
+
+#include <stdio.h>
+
+int main(void) {
+	UART_init(COMPUTED_UBRR);
+	//fdevopen(UART_Transmit, UART_Receive);
+	while (1) {
+		UART_Transmit('0');
+		/*
+		UART_Transmit('B');
+		UART_Transmit('\n');
+		UART_Transmit('\0');
+		*/
 		
-		// Set PC0 to 0
-		PORTC &= ~1;
 	}
 }
-
