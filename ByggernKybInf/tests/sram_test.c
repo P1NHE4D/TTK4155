@@ -1,38 +1,20 @@
 /*
- * main.c
+ * sram.c
  *
- * Created: 06.09.2022 12:55:30
+ * Created: 09.09.2022 15:15:35
  *  Author: thomahl
- */ 
+ */
 
-#include "avr/io.h"
-#include "drivers/uart.h"
-
-
-#define FOSC 4915200
-#define BAUD 9600
-#define COMPUTED_UBRR FOSC/16/BAUD-1
-
+#include "../drivers/xmem.h"
 #include <stdio.h>
 #include <stdlib.h>
 
-
-int main(void) {
-	UART_init(COMPUTED_UBRR);
-
-	// "External SRAM operation is enabled by setting the SRE bit in the MCUCR register"
-	MCUCR |= (1 << SRE);
-	// Release P7-P4 from external memory (we want to use it for JTAG)
-	SFIOR |= (1 << XMM2);
-	
-	SRAM_test();   
-
-}
-
+// This is Lab Support Data > Misc. Resources > sram_test.c modified to use our sram driver.
 void SRAM_test(void)
 {
-	volatile char *ext_ram = (char *) 0x1800; // Start address for the SRAM
-	uint16_t ext_ram_size = 0x800;
+	// Initialize xmem inside here, to make absolutely sure we don't forget to do this when testing SRAM...
+	xmem_init();
+	
 	uint16_t write_errors = 0;
 	uint16_t retrieval_errors = 0;
 	printf("Starting SRAM test...\n\r");
@@ -41,10 +23,10 @@ void SRAM_test(void)
 	uint16_t seed = rand();
 	// Write phase: Immediately check that the correct value was stored
 	srand(seed);
-	for (uint16_t i = 0; i < ext_ram_size; i++) {
+	for (uint16_t i = 0; i < SRAM_SIZE; i++) {
 		uint8_t some_value = rand();
-		ext_ram[i] = some_value;
-		uint8_t retreived_value = ext_ram[i];
+		sram_write(some_value, i);
+		uint8_t retreived_value = sram_read(i);
 		if (retreived_value != some_value) {
 			printf("Write phase error: ext_ram[%4d] = %02X (should be %02X)\n\r", i, retreived_value, some_value);
 			write_errors++;
@@ -53,9 +35,9 @@ void SRAM_test(void)
 	// Retrieval phase: Check that no values were changed during or after the write phase
 	srand(seed);
 	// reset the PRNG to the state it had before the write phase
-	for (uint16_t i = 0; i < ext_ram_size; i++) {
+	for (uint16_t i = 0; i < SRAM_SIZE; i++) {
 		uint8_t some_value = rand();
-		uint8_t retreived_value = ext_ram[i];
+		uint8_t retreived_value = sram_read(i);
 		if (retreived_value != some_value) {
 			printf("Retrieval phase error: ext_ram[%4d] = %02X (should be %02X)\n\r", i, retreived_value, some_value);
 			retrieval_errors++;
