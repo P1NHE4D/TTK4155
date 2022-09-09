@@ -16,14 +16,8 @@
 
 int main(void) {
 	UART_init(COMPUTED_UBRR);
-	//fdevopen(UART_Transmit, UART_Receive);
 	while (1) {
-		UART_Transmit('0');
-		/*
-		UART_Transmit('B');
-		UART_Transmit('\n');
-		UART_Transmit('\0');
-		*/
-		
+		int foo = 70;
+		printf("foo %d\n\r", foo);
 	}
 }
