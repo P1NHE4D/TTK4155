@@ -163,7 +163,6 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="drivers" />
-    <Folder Include="tests" />
   </ItemGroup>
   <Import Project="$(AVRSTUDIO_EXE_PATH)\\Vs\\Compiler.targets" />
 </Project>
