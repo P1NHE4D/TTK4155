@@ -22,5 +22,10 @@ int main(void) {
 	UART_init(COMPUTED_UBRR);
 	xmem_init();
 		
-	sram_test();   
+	sram_test();
+	volatile char *ext_mem = (char*) 0x1800 - 1;
+	ext_mem[0] = 2;
+	*ext_mem = (char*) 0x1800;
+	ext_mem[0] = 2;
+	ext_mem[1] = 2;
 }

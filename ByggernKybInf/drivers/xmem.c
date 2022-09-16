@@ -62,5 +62,5 @@ void sram_test()
 			retrieval_errors++;
 		}
 	}
-	printf("SRAM test completed with \n%4d errors in write phase and \n%4d errors in retrieval phase\n\n\r", write_errors, retrieval_errors);
+	printf("SRAM test completed with \n\r%4d errors in write phase and \n\r%4d errors in retrieval phase\n\n\r", write_errors, retrieval_errors);
 }
