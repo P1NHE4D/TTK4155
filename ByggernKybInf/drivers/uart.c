@@ -7,6 +7,7 @@
 
 #include <avr/io.h>
 #include <stdio.h>
+#include "uart.h"
 
 
 void UART_Transmit(unsigned char data) {
