@@ -24,6 +24,16 @@ void xmem_init(void) {
 void sram_write(uint8_t data, uint16_t addr) {
 	volatile char *ext_mem = (char*) SRAM_BASE_ADDRESS;
 	ext_mem[addr] = data;
+	
+	//volatile char *ext_mem = (char*) 0x1800;
+	ext_mem[0] = 1;
+	
+	ext_mem[0] = 0x1800;
+	ext_mem[0] = 1;
+		ext_mem[0] = 1;
+			ext_mem[0] = 1;
+	ext_mem[0] = 1;
+		ext_mem[0] = 1;
 }
 
 uint8_t sram_read(uint16_t addr) {

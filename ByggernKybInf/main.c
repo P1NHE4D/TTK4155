@@ -16,6 +16,9 @@
 
 #define F_CPU FOSC
 
+#define ADC_CLK FOSC/2
+#define ADC_T_CONV (9 * ADC_NUM_CHANNELS * 2) / ADC_CLK
+
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -27,14 +30,6 @@ uint8_t adc_read2(uint8_t channel);
 int main(void) {
 	UART_init(COMPUTED_UBRR);
 	xmem_init();
-	
-	/*
-	printf("foo\n\r");
-	_delay_ms(10000);
-	printf("bar\n\r");
-	*/
-	sram_test();
-
 
 	DDRD |= (1 << DDD5);
 	
@@ -52,7 +47,7 @@ int main(void) {
 	OCR1A = 0;
 	
 	while (1) {
-		printf("Channel 0 reads %d\n", adc_read2(0));
+		printf("Channel 0,1 reads %d,%d\n\r", adc_read2(0), adc_read2(1));
 	}
 }
 
@@ -68,16 +63,16 @@ uint8_t adc_read2(uint8_t channel) {
 	volatile char *ext_mem = (char*) ADC_BASE_ADDRESS;
 	
 	// write to the ADC to initiate a conversion
-	*ext_mem = 1;
-	
+	ext_mem[0] = 1;
+		
 	// wait t_conv time for the conversion to finish
-	_delay_ms(9 * ADC_NUM_CHANNELS * 2 / (FOSC/2));
+	_delay_ms(ADC_T_CONV);
 		
 	char channels[ADC_NUM_CHANNELS];
 	
 	for (int i = 0; i < ADC_NUM_CHANNELS; i++) {
 		// read next channel from ADC (first channel read is channel 0)
-		channels[i] = *ext_mem;
+		channels[i] = ext_mem[0];
 	}
 	
 	return channels[channel];
