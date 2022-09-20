@@ -16,11 +16,13 @@
 
 #define F_CPU FOSC
 
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <util/delay.h>
 
 
+uint8_t adc_read2(uint8_t channel);
 
 int main(void) {
 	UART_init(COMPUTED_UBRR);
@@ -34,7 +36,6 @@ int main(void) {
 	sram_test();
 
 
-	
 	DDRD |= (1 << DDD5);
 	
 	// table 56
@@ -49,16 +50,19 @@ int main(void) {
 	// set OCR1A (it's divided into two registers)
 	// ...let frequency equal CPU frequency?
 	OCR1A = 0;
+	
+	while (1) {
+		printf("Channel 0 reads %d\n", adc_read2(0));
+	}
 }
 
-/*
 const uint16_t ADC_BASE_ADDRESS = 0x1400;
 const int ADC_NUM_CHANNELS = 4;
 
 // channel must be one of 0,1,2,3
-uint8_t adc_read(uint8_t channel) {
-	if channel >= ADC_NUM_CHANNELS {
-		printf("adc_read was passed argument channel out of bounds !(argument %d >= number of channels %d)", channel, ADC_NUM_CHANNELS)
+uint8_t adc_read2(uint8_t channel) {
+	if (channel >= ADC_NUM_CHANNELS) {
+		printf("adc_read was passed argument channel out of bounds !(argument %d >= number of channels %d)", channel, ADC_NUM_CHANNELS);
 	}
 	
 	volatile char *ext_mem = (char*) ADC_BASE_ADDRESS;
@@ -67,8 +71,8 @@ uint8_t adc_read(uint8_t channel) {
 	*ext_mem = 1;
 	
 	// wait t_conv time for the conversion to finish
-	// TODO
-	
+	_delay_ms(9 * ADC_NUM_CHANNELS * 2 / (FOSC/2));
+		
 	char channels[ADC_NUM_CHANNELS];
 	
 	for (int i = 0; i < ADC_NUM_CHANNELS; i++) {
@@ -76,6 +80,5 @@ uint8_t adc_read(uint8_t channel) {
 		channels[i] = *ext_mem;
 	}
 	
-	return channels[channel];	
+	return channels[channel];
 }
-*/
