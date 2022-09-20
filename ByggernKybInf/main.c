@@ -5,75 +5,37 @@
  *  Author: thomahl
  */ 
 
+
+
+
+
+#include "defines.h"
 #include "avr/io.h"
 #include "drivers/uart.h"
 #include "drivers/xmem.h"
-
-
-#define FOSC 4915200
-#define BAUD 9600
-#define COMPUTED_UBRR FOSC/16/BAUD-1
-
-#define F_CPU FOSC
-
-#define ADC_CLK FOSC/2
-#define ADC_T_CONV (9 * ADC_NUM_CHANNELS * 2) / ADC_CLK
+#include "drivers/adc.h"
 
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <util/delay.h>
 
-
-uint8_t adc_read2(uint8_t channel);
+uint8_t adc_read(uint8_t channel);
 
 int main(void) {
 	UART_init(COMPUTED_UBRR);
 	xmem_init();
+	adc_init();
 
-	DDRD |= (1 << DDD5);
 	
-	// table 56
-	// yes to CTC mode
-	TCCR1B |= (1 << WGM12);
-	TCCR1B |= (1 << CS10);
-
-	// table 53
-	// toggle signal on each match
-	TCCR1A |= (1 << COM1A0);
-
-	// set OCR1A (it's divided into two registers)
-	// ...let frequency equal CPU frequency?
-	OCR1A = 0;
-	
+	/*
 	while (1) {
-		printf("Channel 0,1 reads %d,%d\n\r", adc_read2(0), adc_read2(1));
+		printf("Channel 0,1,2,3 reads %4d,%4d,%4d,%4d\n\r", adc_read(0), adc_read(1), adc_read(2), adc_read(3));
 	}
-}
-
-const uint16_t ADC_BASE_ADDRESS = 0x1400;
-const int ADC_NUM_CHANNELS = 4;
-
-// channel must be one of 0,1,2,3
-uint8_t adc_read2(uint8_t channel) {
-	if (channel >= ADC_NUM_CHANNELS) {
-		printf("adc_read was passed argument channel out of bounds !(argument %d >= number of channels %d)", channel, ADC_NUM_CHANNELS);
-	}
+	*/
 	
-	volatile char *ext_mem = (char*) ADC_BASE_ADDRESS;
-	
-	// write to the ADC to initiate a conversion
-	ext_mem[0] = 1;
-		
-	// wait t_conv time for the conversion to finish
-	_delay_ms(ADC_T_CONV);
-		
-	char channels[ADC_NUM_CHANNELS];
-	
-	for (int i = 0; i < ADC_NUM_CHANNELS; i++) {
-		// read next channel from ADC (first channel read is channel 0)
-		channels[i] = ext_mem[0];
-	}
-	
-	return channels[channel];
+	/*
+	Exercise 3 task 5:
+		Cutoff frequency: 795.8hz (using https://www.omnicalculator.com/physics/low-pass-filter, using R = 2000 Omh, C = 100 nF)
+		Slope at cutoff frequency: ?
+	*/
 }
