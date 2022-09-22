@@ -18,4 +18,10 @@
 #define ADC_CLK FOSC/2
 #define ADC_T_CONV (9 * ADC_NUM_CHANNELS * 2) / ADC_CLK
 
+#define OLED_BASE_ADDRESS 0x1200
+// bit of address bus used as pin in to D/C of OLED
+// must use one of the bits not shared with the databus
+// using the MSB of the address bus
+#define OLED_COMMAND_DATA_CONTROL_ADDRESS_BIT 11
+
 #endif /* DEFINES_H_ */

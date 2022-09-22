@@ -25,5 +25,4 @@ void adc_calibrate(void);
 
 pos_t pos_read(void);
 
-
 #endif /* ADC_H_ */
