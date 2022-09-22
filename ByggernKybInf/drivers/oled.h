@@ -37,7 +37,7 @@ void OLED_print_char(char c);
 
 void OLED_print(char* str);
 
-void OLED_set_brightness(int lvl);
+void OLED_set_brightness(uint8_t lvl);
 
 
 #endif /* OLED_H_ */

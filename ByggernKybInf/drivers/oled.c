@@ -7,6 +7,7 @@
 
 #include <avr/pgmspace.h>
 #include <string.h>
+#include <stdint.h>
 #include "oled.h"
 #include "../defines.h"
 #include "../fonts.h"
@@ -68,22 +69,31 @@ void OLED_reset() {
 	// TODO
 	//  don't know what this is supposed to do...
 	//  clear screen and go to home?
+	//  in that case: OLED_clear_line for each line, then OLED_home
 }
 
 void OLED_home() {
 	// TODO
+	// use OLED_POS to g to the top-left
 }
 
 void OLED_goto_line(int line) {
 	// TODO
+	// use OLED_pos to go to the beginning of one of the lines
 }
 
 void OLED_clear_line(int line) {
 	// TODO
+	// OLED_goto_line, then write 0x00 128 times
 }
 
 void OLED_pos(int row, int column) {
 	// TODO
+	// we could use command 21 & 22? (Set Column Address & Set Page
+	// Address). We don't really need the "end" address thing, I think, but
+	// sending this command sets the column/page address to the start
+	// address we provide (we could always provide it with max end
+	// address?)
 }
 
 void OLED_print_char(char c) {
@@ -101,6 +111,7 @@ void OLED_print(char* str) {
 	}
 }
 
-void OLED_set_brightness(int lvl) {
-	// TODO
+void OLED_set_brightness(uint8_t lvl) {
+	OLED_write_command(0x81); // Set Contrast Control
+	OLED_write_command(lvl);
 }
