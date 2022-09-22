@@ -11,19 +11,11 @@
 
 #include <stdint.h>
 
-
-typedef struct pos_t {
-	int8_t x, y;
-} pos_t;
-
+enum channel_t {JOYSTICK_X, JOYSTICK_Y, LEFT_SLIDER, RIGHT_SLIDER};
 
 void adc_init(void);
-
-uint8_t adc_read(uint8_t channel);
-
+uint8_t adc_read(channel_t channel);
 void adc_calibrate(void);
-
-pos_t pos_read(void);
 
 
 #endif /* ADC_H_ */

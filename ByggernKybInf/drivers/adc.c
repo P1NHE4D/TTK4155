@@ -34,10 +34,7 @@ void adc_init(void) {
 }
 
 // channel must be one of 0,1,2,3
-uint8_t adc_read(uint8_t channel) {
-	if (channel >= ADC_NUM_CHANNELS) {
-		printf("adc_read was passed argument channel out of bounds !(argument %d >= number of channels %d)", channel, ADC_NUM_CHANNELS);
-	}
+uint8_t adc_read(channel_t channel) {
 	
 	volatile char *ext_mem = (char*) ADC_BASE_ADDRESS;
 	
@@ -57,16 +54,12 @@ uint8_t adc_read(uint8_t channel) {
 	return channels[channel];
 }
 
-void adc_calibrate(void) {
-	// noop for now. Implement if we want to center joystick position on 0,0
-}
-
 pos_t pos_read(void) {
 	pos_t pos;
 
 	// joystick horizontal,vertical on channel 0,1
-	pos.x = adc_read(0);
-	pos.y = adc_read(1);
+	pos.x = adc_read(JOYSTICK_X);
+	pos.y = adc_read(JOYSTICK_Y);
 
 	return pos;
 }
