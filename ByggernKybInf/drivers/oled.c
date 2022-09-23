@@ -12,7 +12,7 @@
 #include "../defines.h"
 #include "../fonts.h"
 
-void OLED_write(volatile char word, WRITE_MODE mode) {
+void OLED_write(volatile char payload, WRITE_MODE mode) {
 	volatile char *ext_mem = (char*) OLED_BASE_ADDRESS;
 
 	// set D/C# pin depending on mode
@@ -23,12 +23,14 @@ void OLED_write(volatile char word, WRITE_MODE mode) {
 	} else {
 		// indicate as command by leaving low
 	}
+	
+	printf("%x,%x,%x\n\r", OLED_BASE_ADDRESS, offset, OLED_BASE_ADDRESS + offset);
 
 	// write to OLED with OLED_COMMAND_DATA_CONTROL_ADDRESS_BIT bit of the
 	// address used as D/C# to indicate data or command. Our address
 	// decoding scheme will chip-select OLED, and the MCU will set WR and
-	// put "word" onto the data bus.
-	ext_mem[offset] = word;
+	// put "payload" onto the data bus.
+	ext_mem[offset] = payload;
 }
 
 void OLED_write_data(volatile char data) {
@@ -97,14 +99,16 @@ void OLED_pos(int row, int column) {
 }
 
 void OLED_print_char(char c) {
-	/* TODO not compiling
 	// get 8x8 version of character from fonts
-	char font_char[8] = pgm_read_byte(&(font8[c - 32]));
+	char font_char[8];
+	for (int i = 0; i < 8; i++) {
+		font_char[i] = pgm_read_byte(&(font8[c - 32][i]));
+	}
 
+	// draw font_char onto the oled segment by segment
 	for (int i = 0; i < 8; i++) {
 		OLED_write_data(font_char[i]);
 	}
-	*/
 }
 
 void OLED_print(char* str) {

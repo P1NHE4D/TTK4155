@@ -15,7 +15,7 @@ typedef enum {
 	WRITE_MODE_COMMAND,
 } WRITE_MODE;
 
-void OLED_write(volatile char word, WRITE_MODE mode);
+void OLED_write(volatile char payload, WRITE_MODE mode);
 
 void OLED_write_data(volatile char data);
 

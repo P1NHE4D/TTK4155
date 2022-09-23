@@ -22,6 +22,6 @@
 // bit of address bus used as pin in to D/C of OLED
 // must use one of the bits not shared with the databus
 // using the MSB of the address bus
-#define OLED_COMMAND_DATA_CONTROL_ADDRESS_BIT 11
+#define OLED_COMMAND_DATA_CONTROL_ADDRESS_BIT 8
 
 #endif /* DEFINES_H_ */

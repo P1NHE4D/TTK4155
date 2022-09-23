@@ -15,48 +15,64 @@
 #include "drivers/xmem.h"
 #include "drivers/adc.h"
 #include "drivers/user_controls.h"
+#include "drivers/oled.h"
 
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 
-uint8_t adc_read(uint8_t channel);
-
 int main(void) {
 	UART_init(COMPUTED_UBRR);
 	xmem_init();
+	sram_test();
 	adc_init();
-			
-	pos_t pos = read_joystick_position();
-	printf("neutral before calibrate: pos x,y %d,%d\n\r", pos.x, pos.y);
+	OLED_init();
 	
-	joystick_calibrate();
+	volatile char *ext_mem = (char*) OLED_BASE_ADDRESS;
+	ext_mem[(1 << OLED_COMMAND_DATA_CONTROL_ADDRESS_BIT)] = 0;
 	
-	pos = read_joystick_position();
-	printf("neutral after calibrate:  pos x,y %d,%d\n\r", pos.x, pos.y);
-//	_delay_ms(2000);
+	OLED_write_command(0x20);
+	OLED_write_command(0b00);
 	
-	
-	while (1) {
-		pos = read_joystick_position();
-		direction_t dir = read_joystick_direction();
-		//printf("pos x,y,direction %3d,%3d,%d\n\r", pos.x, pos.y, dir);
-		//printf("left,right %3d,%3d\n\r", read_slider(LEFT_SLIDER), read_slider(RIGHT_SLIDER));
-		printf("button 1,2,3, %3d,%3d,%3d\n\r", read_button(JOYSTICK), read_button(LEFT_BUTTON), read_button(RIGHT_BUTTON));
-	}
-	
-	
+	OLED_write_command(0x22);
+	OLED_write_command(0b000);
+	OLED_write_command(0b111);
 
-	
-	/*
-	while (1) {
-		printf("Channel 0,1,2,3 reads %4d,%4d,%4d,%4d\n\r", adc_read(0), adc_read(1), adc_read(2), adc_read(3));
+	OLED_write_command(0x21);
+	OLED_write_command(0b0000000);
+	OLED_write_command(0b1111111);
+
+	for (int i = 0; i < 95; i++) {
+		OLED_print_char(i+32);
 	}
-	*/
+	
+	exit(0);
+	int i = 0;
+	while(1) {
+		OLED_write_data(0);
+		/*
+		if (i % 2 == 0) {
+			OLED_write_data(0b10101010);
+		} else {
+			OLED_write_data(0b01010101);
+		}
+		*/
+		i++;
+	}
+	
+	
 	
 	/*
 	Exercise 3 task 5:
 		Cutoff frequency: 795.8hz (using https://www.omnicalculator.com/physics/low-pass-filter, using R = 2000 Omh, C = 100 nF)
 		Slope at cutoff frequency: ?
 	*/
+}
+
+void read_user_controls() {
+	joystick_calibrate();
+	while (1) {
+		pos_t pos = read_joystick_position();
+		printf("joystick x,y %4d,%4d,%4d,%4d\n\r", pos.x, pos.y, read_slider(LEFT_SLIDER), read_slider(RIGHT_SLIDER));
+	}
 }
