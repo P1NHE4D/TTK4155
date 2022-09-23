@@ -11,7 +11,7 @@
 
 #include <stdint.h>
 
-enum channel_t {JOYSTICK_X, JOYSTICK_Y, LEFT_SLIDER, RIGHT_SLIDER};
+typedef enum {JOYSTICK_Y, JOYSTICK_X, LEFT_SLIDER, RIGHT_SLIDER} channel_t;
 
 void adc_init(void);
 uint8_t adc_read(channel_t channel);

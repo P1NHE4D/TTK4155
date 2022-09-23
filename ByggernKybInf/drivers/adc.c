@@ -53,13 +53,3 @@ uint8_t adc_read(channel_t channel) {
 	
 	return channels[channel];
 }
-
-pos_t pos_read(void) {
-	pos_t pos;
-
-	// joystick horizontal,vertical on channel 0,1
-	pos.x = adc_read(JOYSTICK_X);
-	pos.y = adc_read(JOYSTICK_Y);
-
-	return pos;
-}

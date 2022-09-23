@@ -154,6 +154,12 @@
     <Compile Include="drivers\adc.h">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="drivers\user_controls.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="drivers\user_controls.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="drivers\xmem.c">
       <SubType>compile</SubType>
     </Compile>
