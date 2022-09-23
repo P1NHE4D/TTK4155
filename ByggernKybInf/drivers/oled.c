@@ -8,6 +8,7 @@
 #include <avr/pgmspace.h>
 #include <string.h>
 #include <stdint.h>
+#include <stdio.h>
 #include "oled.h"
 #include "../defines.h"
 #include "../fonts.h"
@@ -24,7 +25,7 @@ void OLED_write(volatile char payload, WRITE_MODE mode) {
 		// indicate as command by leaving low
 	}
 	
-	printf("%x,%x,%x\n\r", OLED_BASE_ADDRESS, offset, OLED_BASE_ADDRESS + offset);
+	//printf("%x,%x,%x\n\r", OLED_BASE_ADDRESS, offset, OLED_BASE_ADDRESS + offset);
 
 	// write to OLED with OLED_COMMAND_DATA_CONTROL_ADDRESS_BIT bit of the
 	// address used as D/C# to indicate data or command. Our address
@@ -40,6 +41,8 @@ void OLED_write_data(volatile char data) {
 void OLED_write_command(volatile char command) {
 	OLED_write(command, WRITE_MODE_COMMAND);
 }
+
+char noop_receive() { }
 
 // PDF:"OLED LY190-128064" section 9.4
 void OLED_init() { 
@@ -65,37 +68,45 @@ void OLED_init() {
 	OLED_write_command(0xa4); //out follows RAM content
 	OLED_write_command(0xa6); //set normal display
 	OLED_write_command(0xaf); // display on
+	OLED_reset();
 }
 
 void OLED_reset() {
-	// TODO
-	//  don't know what this is supposed to do...
-	//  clear screen and go to home?
-	//  in that case: OLED_clear_line for each line, then OLED_home
+	OLED_home();
+	for (int i = 0; i < 8; i++) {
+		OLED_clear_line(i);
+	}
+	OLED_home();
 }
 
 void OLED_home() {
-	// TODO
-	// use OLED_POS to g to the top-left
+	OLED_cursor_pos(0, 0);
 }
 
-void OLED_goto_line(int line) {
-	// TODO
-	// use OLED_pos to go to the beginning of one of the lines
+void OLED_goto_line(uint8_t line) {
+	OLED_cursor_pos(line, 0);
 }
 
-void OLED_clear_line(int line) {
-	// TODO
-	// OLED_goto_line, then write 0x00 128 times
+// note: will result in goto line 'line'
+void OLED_clear_line(uint8_t line) {
+	OLED_goto_line(line);
+	for (int i = 0; i < 128; i++) {
+		OLED_write_data(0);
+	}
+	// cursor will wrap back to start at next write,
+	// but goto line again just in case
+	OLED_goto_line(line);
 }
 
-void OLED_pos(int row, int column) {
-	// TODO
-	// we could use command 21 & 22? (Set Column Address & Set Page
-	// Address). We don't really need the "end" address thing, I think, but
-	// sending this command sets the column/page address to the start
-	// address we provide (we could always provide it with max end
-	// address?)
+// note: end position is always max,max
+void OLED_cursor_pos(uint8_t row, uint8_t column) {
+	OLED_write_command(0x22);
+	OLED_write_command(row);
+	OLED_write_command(0b111);
+
+	OLED_write_command(0x21);
+	OLED_write_command(column);
+	OLED_write_command(0b1111111);
 }
 
 void OLED_print_char(char c) {

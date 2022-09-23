@@ -21,46 +21,20 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+// needed for include of <util/delay.h>
+#define F_CPU FOSC
+#include <util/delay.h>
+
 int main(void) {
 	UART_init(COMPUTED_UBRR);
+	stdout = &UART_STREAM;
 	xmem_init();
 	sram_test();
 	adc_init();
 	OLED_init();
 	
-	volatile char *ext_mem = (char*) OLED_BASE_ADDRESS;
-	ext_mem[(1 << OLED_COMMAND_DATA_CONTROL_ADDRESS_BIT)] = 0;
-	
-	OLED_write_command(0x20);
-	OLED_write_command(0b00);
-	
-	OLED_write_command(0x22);
-	OLED_write_command(0b000);
-	OLED_write_command(0b111);
-
-	OLED_write_command(0x21);
-	OLED_write_command(0b0000000);
-	OLED_write_command(0b1111111);
-
-	for (int i = 0; i < 95; i++) {
-		OLED_print_char(i+32);
-	}
-	
-	exit(0);
-	int i = 0;
-	while(1) {
-		OLED_write_data(0);
-		/*
-		if (i % 2 == 0) {
-			OLED_write_data(0b10101010);
-		} else {
-			OLED_write_data(0b01010101);
-		}
-		*/
-		i++;
-	}
-	
-	
+	//read_user_controls();
+	oled_test();
 	
 	/*
 	Exercise 3 task 5:
@@ -69,10 +43,37 @@ int main(void) {
 	*/
 }
 
+void oled_test() {
+	stdout = &OLED_STREAM;
+
+	OLED_goto_line(1);
+	printf("This is line 1");
+	OLED_goto_line(2);
+	printf("This is line 2");
+	OLED_goto_line(3);
+	printf("This is line 3");
+	OLED_clear_line(1);
+	printf("cleared line 1");
+	OLED_cursor_pos(6, 63);
+	printf("mid 6");
+	
+	while (1) {
+		for (int i = 0; i < 256; i++) {
+			OLED_set_brightness(i);
+			_delay_ms(50);
+		}
+		
+		for (int i = 255; i >= 0; i--) {
+			OLED_set_brightness(i);
+			_delay_ms(50);
+		}
+	}
+}
+
 void read_user_controls() {
 	joystick_calibrate();
 	while (1) {
 		pos_t pos = read_joystick_position();
-		printf("joystick x,y %4d,%4d,%4d,%4d\n\r", pos.x, pos.y, read_slider(LEFT_SLIDER), read_slider(RIGHT_SLIDER));
+		printf("joystick x,y slider left,right %4d,%4d,%4d,%4d\n\r", pos.x, pos.y, read_slider(LEFT_SLIDER), read_slider(RIGHT_SLIDER));
 	}
 }
