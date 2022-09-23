@@ -14,6 +14,7 @@
 #include "drivers/uart.h"
 #include "drivers/xmem.h"
 #include "drivers/adc.h"
+#include "drivers/user_controls.h"
 
 #include <stdint.h>
 #include <stdio.h>
@@ -25,6 +26,26 @@ int main(void) {
 	UART_init(COMPUTED_UBRR);
 	xmem_init();
 	adc_init();
+			
+	pos_t pos = read_joystick_position();
+	printf("neutral before calibrate: pos x,y %d,%d\n\r", pos.x, pos.y);
+	
+	joystick_calibrate();
+	
+	pos = read_joystick_position();
+	printf("neutral after calibrate:  pos x,y %d,%d\n\r", pos.x, pos.y);
+//	_delay_ms(2000);
+	
+	
+	while (1) {
+		pos = read_joystick_position();
+		direction_t dir = read_joystick_direction();
+		//printf("pos x,y,direction %3d,%3d,%d\n\r", pos.x, pos.y, dir);
+		//printf("left,right %3d,%3d\n\r", read_slider(LEFT_SLIDER), read_slider(RIGHT_SLIDER));
+		printf("button 1,2,3, %3d,%3d,%3d\n\r", read_button(JOYSTICK), read_button(LEFT_BUTTON), read_button(RIGHT_BUTTON));
+	}
+	
+	
 
 	
 	/*
