@@ -154,6 +154,12 @@
     <Compile Include="drivers\adc.h">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="drivers\oled.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="drivers\oled.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="drivers\user_controls.c">
       <SubType>compile</SubType>
     </Compile>
@@ -170,6 +176,9 @@
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="drivers\uart.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="fonts.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="main.c">

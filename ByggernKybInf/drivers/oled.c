@@ -17,10 +17,10 @@ void OLED_write(volatile char word, WRITE_MODE mode) {
 
 	// set D/C# pin depending on mode
 	uint16_t offset = 0;
-	if mode == WRITE_MODE_DATA {
+	if (mode == WRITE_MODE_DATA) {
 		// indicate as data by setting high
 		offset |= (1 << OLED_COMMAND_DATA_CONTROL_ADDRESS_BIT);
-	} else {
+	} else {
 		// indicate as command by leaving low
 	}
 
@@ -32,7 +32,7 @@ void OLED_write(volatile char word, WRITE_MODE mode) {
 }
 
 void OLED_write_data(volatile char data) {
-	OLED_write(command, WRITE_MODE_DATA);
+	OLED_write(data, WRITE_MODE_DATA);
 }
 
 void OLED_write_command(volatile char command) {
@@ -97,16 +97,18 @@ void OLED_pos(int row, int column) {
 }
 
 void OLED_print_char(char c) {
+	/* TODO not compiling
 	// get 8x8 version of character from fonts
 	char font_char[8] = pgm_read_byte(&(font8[c - 32]));
 
 	for (int i = 0; i < 8; i++) {
 		OLED_write_data(font_char[i]);
 	}
+	*/
 }
 
 void OLED_print(char* str) {
-	for (int i = 0; i < strlen(string); i++) {
+	for (int i = 0; i < strlen(str); i++) {
 		OLED_print_char(str[i]);
 	}
 }
