@@ -15,48 +15,65 @@
 #include "drivers/xmem.h"
 #include "drivers/adc.h"
 #include "drivers/user_controls.h"
+#include "drivers/oled.h"
 
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 
-uint8_t adc_read(uint8_t channel);
+// needed for include of <util/delay.h>
+#define F_CPU FOSC
+#include <util/delay.h>
 
 int main(void) {
 	UART_init(COMPUTED_UBRR);
+	stdout = &UART_STREAM;
 	xmem_init();
+	sram_test();
 	adc_init();
-			
-	pos_t pos = read_joystick_position();
-	printf("neutral before calibrate: pos x,y %d,%d\n\r", pos.x, pos.y);
+	OLED_init();
 	
-	joystick_calibrate();
-	
-	pos = read_joystick_position();
-	printf("neutral after calibrate:  pos x,y %d,%d\n\r", pos.x, pos.y);
-//	_delay_ms(2000);
-	
-	
-	while (1) {
-		pos = read_joystick_position();
-		direction_t dir = read_joystick_direction();
-		//printf("pos x,y,direction %3d,%3d,%d\n\r", pos.x, pos.y, dir);
-		//printf("left,right %3d,%3d\n\r", read_slider(LEFT_SLIDER), read_slider(RIGHT_SLIDER));
-		printf("button 1,2,3, %3d,%3d,%3d\n\r", read_button(JOYSTICK), read_button(LEFT_BUTTON), read_button(RIGHT_BUTTON));
-	}
-	
-	
-
-	
-	/*
-	while (1) {
-		printf("Channel 0,1,2,3 reads %4d,%4d,%4d,%4d\n\r", adc_read(0), adc_read(1), adc_read(2), adc_read(3));
-	}
-	*/
+	//read_user_controls();
+	oled_test();
 	
 	/*
 	Exercise 3 task 5:
 		Cutoff frequency: 795.8hz (using https://www.omnicalculator.com/physics/low-pass-filter, using R = 2000 Omh, C = 100 nF)
 		Slope at cutoff frequency: ?
 	*/
+}
+
+void oled_test() {
+	stdout = &OLED_STREAM;
+
+	OLED_goto_line(1);
+	printf("This is line 1");
+	OLED_goto_line(2);
+	printf("This is line 2");
+	OLED_goto_line(3);
+	printf("This is line 3");
+	OLED_clear_line(1);
+	printf("cleared line 1");
+	OLED_cursor_pos(6, 63);
+	printf("mid 6");
+	
+	while (1) {
+		for (int i = 0; i < 256; i++) {
+			OLED_set_brightness(i);
+			_delay_ms(50);
+		}
+		
+		for (int i = 255; i >= 0; i--) {
+			OLED_set_brightness(i);
+			_delay_ms(50);
+		}
+	}
+}
+
+void read_user_controls() {
+	joystick_calibrate();
+	while (1) {
+		pos_t pos = read_joystick_position();
+		printf("joystick x,y slider left,right %4d,%4d,%4d,%4d\n\r", pos.x, pos.y, read_slider(LEFT_SLIDER), read_slider(RIGHT_SLIDER));
+	}
 }

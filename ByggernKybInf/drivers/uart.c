@@ -36,6 +36,4 @@ void UART_init(unsigned int ubrr) {
 	
 	// set frame format
 	UCSR0C = (1<<URSEL0) | (1<<USBS0) | (3<<UCSZ00);
-	
-	fdevopen(UART_Transmit, UART_Receive);
 }
