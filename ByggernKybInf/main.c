@@ -41,7 +41,8 @@ int main(void) {
 		pos = read_joystick_position();
 		direction_t dir = read_joystick_direction();
 		//printf("pos x,y,direction %3d,%3d,%d\n\r", pos.x, pos.y, dir);
-		printf("left,right %3d,%3d\n\r", read_slider(LEFT_SLIDER), read_slider(RIGHT_SLIDER));
+		//printf("left,right %3d,%3d\n\r", read_slider(LEFT_SLIDER), read_slider(RIGHT_SLIDER));
+		printf("button 1,2,3, %3d,%3d,%3d\n\r", read_button(JOYSTICK), read_button(LEFT_BUTTON), read_button(RIGHT_BUTTON));
 	}
 	
 	

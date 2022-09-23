@@ -65,10 +65,12 @@ bool read_button(button_t button) {
     // TODO: check if correct
     switch (button) {
         case LEFT_BUTTON:
-            return (PINB & PINB0);
+			// TODO choose a pin
+            return false;
         case RIGHT_BUTTON:
-            return (PINB & PINB1);
+			// TODO choose a pin
+            return false;
         case JOYSTICK:
-            return (PINB & PINB2);
+            return (PINB & PINB1);
     }
 }

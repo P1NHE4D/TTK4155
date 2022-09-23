@@ -8,7 +8,7 @@ typedef struct pos_t {
 	int8_t x, y;
 } pos_t;
 typedef enum { UP, RIGHT, DOWN, LEFT, NEUTRAL } direction_t;
-typedef enum {JOYSTICK, LEFT_BUTTON, RIGHT_BUTTON} button_t;
+typedef enum {LEFT_BUTTON, JOYSTICK, RIGHT_BUTTON} button_t;
 
 void joystick_calibrate(void);
 pos_t read_joystick_position(void);
