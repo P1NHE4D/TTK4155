@@ -10,6 +10,7 @@ typedef struct pos_t {
 typedef enum { UP, RIGHT, DOWN, LEFT, NEUTRAL } direction_t;
 typedef enum {LEFT_BUTTON, JOYSTICK, RIGHT_BUTTON} button_t;
 
+void user_controls_init(void);
 void joystick_calibrate(void);
 pos_t read_joystick_position(void);
 direction_t read_joystick_direction(void);

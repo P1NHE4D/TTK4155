@@ -7,6 +7,11 @@
 uint8_t joystick_neutral_x;
 uint8_t joystick_neutral_y;
 
+void user_controls_init() {
+	joystick_calibrate();
+	PORTB |= (1 << PB0);
+}
+
 void joystick_calibrate() {
 	joystick_neutral_x = adc_read(JOYSTICK_X);
 	joystick_neutral_y = adc_read(JOYSTICK_Y);
@@ -66,11 +71,11 @@ bool read_button(button_t button) {
     switch (button) {
         case LEFT_BUTTON:
 			// TODO choose a pin
-            return false;
+			return (PINB & (1 << PINB2));
         case RIGHT_BUTTON:
 			// TODO choose a pin
-            return false;
+			return (PINB & (1 << PINB1));
         case JOYSTICK:
-            return (PINB & PINB1);
+            return !(PINB & (1 << PINB0));
     }
 }
