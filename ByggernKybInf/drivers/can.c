@@ -59,20 +59,11 @@ void CAN_send(CAN_message_t msg) {
 
 CAN_message_t CAN_receive() {
 	// dumb implementation for now: just return whatever is in the rx0 buffer
-	
-	uint8_t addr_first_id_byte = MCP_RXB0CTRL + 1;
-	uint8_t addr_first_data_byte = addr_first_id_byte + 5;
-	
+		
 	CAN_message_t received_msg;
 	
-	uint8_t d = mcp2515_read(MCP_RXB0CTRL+5, 1)[0];
-	printf("Before: %d\n\r", d);
-	
 	uint8_t* ptr_rx_buffer = mcp2515_read(MCP_RXB0CTRL, 14);
-	
-	d = mcp2515_read(MCP_RXB0CTRL+5, 1)[0];
-	printf("After: %d\n\r", d);
-	
+		
 	for (int i = 0; i < 5; i++) {
 		received_msg.id[i] = ptr_rx_buffer[i+1];
 	}

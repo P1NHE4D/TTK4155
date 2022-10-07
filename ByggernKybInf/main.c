@@ -227,7 +227,7 @@ int main(void) {
 	// * 7-5 contain SID bits 2-0
 	// * 3 contains EXIDE
 	// * 1-0 contain EID17-16
-	msg.id[1] = (4<<5);
+	msg.id[1] = (3<<5);
 	// ...middle bytes of ID bits are for extended, which we don't care about :) ...
 	// TXBnDLC bits...
 	// * 6 bit contains RTR
@@ -235,7 +235,7 @@ int main(void) {
 	msg.id[4] = 0b00001111;
 	
 	// TXBnDm contain the data... Send the number 3 as data
-	msg.data[7] = 3;
+	msg.data[7] = 5;
 	
 	printf("I sent id: %d data: %d\n\r", msg.id[1] >> 5, msg.data[7]);
 	
