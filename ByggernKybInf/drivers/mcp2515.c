@@ -7,6 +7,7 @@
 
 #include <stdint.h>
 #include <avr/io.h>
+#include <stdlib.h>
 #include "mcp2515.h"
 #include "spi.h"
 #include "uart.h"
@@ -27,32 +28,23 @@ void mcp2515_init() {
 	mcp2515_reset(); // Send reset-command
 	
 	// Self-test
-	value = mcp2515_read(MCP_CANSTAT);
+	value = mcp2515_read(MCP_CANSTAT, 1)[0];
 	if ((value & MODE_MASK) != MODE_CONFIG) {
 		printf("MCP2515 is NOT in configuration mode after reset!\n");
-		return 1;
 	}
 	stdout = &UART_STREAM;
 	
 	// Select loopback
-		
-	mcp2515_select();
 	
-	SPI_transmit(MCP_BITMOD);
-	
-	SPI_transmit(MCP_CANCTRL);
-	
-	uint8_t mode_mask = 7<<5; // 3 MSB, REQOP<0:2>
-	SPI_transmit(mode_mask);
-	
-	SPI_transmit(1<<6); // REQOP1
-	
-	mcp2515_deselect();
-	
-	value = mcp2515_read(MCP_CANSTAT);
+	mcp2515_bit_modify(
+		MCP_CANCTRL,
+		7<<5,        // 3 MSB, REQOP<0:2>
+		1<<6         // REQOP1
+	);
+			
+	value = mcp2515_read(MCP_CANSTAT, 1)[0];
 	if ((value & MODE_MASK) != MODE_LOOPBACK) {
 		printf("MCP2515 is NOT in loopback mode after setting it during init!\n");
-		return 1;
 	}
 }
 
@@ -62,18 +54,21 @@ void mcp2515_reset() {
 	mcp2515_deselect();
 }
 
-uint8_t mcp2515_read(uint8_t address) {
-	uint8_t result;
-	
+uint8_t* mcp2515_read(uint8_t address, uint8_t length) {
 	mcp2515_select();
 	
 	SPI_transmit(MCP_READ); // Send read instruction
 	SPI_transmit(address);  // Send address
-	result = SPI_receive();    // Read result
+	
+	uint8_t* bytes_read = malloc(sizeof(uint8_t) * length);
+	for (int i = 0; i < length; i++) {
+		// Read ith byte
+		bytes_read[i] = SPI_receive();
+	}
 	
 	mcp2515_deselect();
 	
-	return result;
+	return bytes_read;
 }
 
 void mcp2515_write(uint8_t address, uint8_t* data, uint8_t data_length) {	
@@ -85,4 +80,31 @@ void mcp2515_write(uint8_t address, uint8_t* data, uint8_t data_length) {
 		SPI_transmit(data[i]);
 	}
 	mcp2515_deselect();
+}
+
+void mcp2515_rts_tx0() {
+	mcp2515_select();
+	SPI_transmit(MCP_RTS_TX0);
+	mcp2515_deselect();
+}
+
+void mcp2515_bit_modify(uint8_t address, uint8_t mask, uint8_t data) {
+	mcp2515_select();
+		
+	SPI_transmit(MCP_BITMOD);
+		
+	SPI_transmit(address);
+	SPI_transmit(mask);
+	SPI_transmit(data);
+		
+	mcp2515_deselect();
+}
+
+uint8_t mcp2515_rx_status() {
+	mcp2515_select();
+	SPI_transmit(MCP_RX_STATUS);
+	uint8_t value;
+	value = SPI_receive();
+	mcp2515_deselect();
+	return value;
 }

@@ -19,6 +19,7 @@
 #include "drivers/menu.h"
 #include "drivers/spi.h"
 #include "drivers/mcp2515.h"
+#include "drivers/can.h"
 
 #include <stdint.h>
 #include <stdio.h>
@@ -43,9 +44,6 @@ void init() {
 	SPI_init();
 	*/
 	mcp2515_init();
-	uint8_t to_send = 47;
-	mcp2515_write(MCP_TXB0CTRL+10, &to_send, 1);
-	printf("we read %d", mcp2515_read(MCP_TXB0CTRL+10));
 	
 	//read_user_controls();
 }
@@ -218,13 +216,37 @@ void read_user_controls() {
 int main(void) {
 	init();
 	
-	while (1) {
-		PORTB &= ~(1<<PINB4);
-		SPI_transmit(1);
-		PORTB |= (1<<PINB4);
+	uint8_t status = mcp2515_rx_status();
+	printf("status before doing anything is is %d\n\r", status);
 
-	}
 	
+	CAN_message_t msg;
+	// TXBnSIDH bits 7-0 contain SID bits 10-3
+	msg.id[0] = 0;
+	// TXBnSIDL bits...
+	// * 7-5 contain SID bits 2-0
+	// * 3 contains EXIDE
+	// * 1-0 contain EID17-16
+	msg.id[1] = (4<<5);
+	// ...middle bytes of ID bits are for extended, which we don't care about :) ...
+	// TXBnDLC bits...
+	// * 6 bit contains RTR
+	// * 3-0 contain DLC 3-0
+	msg.id[4] = 0b00001111;
+	
+	// TXBnDm contain the data... Send the number 3 as data
+	msg.data[7] = 3;
+	
+	printf("I sent id: %d data: %d\n\r", msg.id[1] >> 5, msg.data[7]);
+	
+	CAN_send(msg);
+		
+	status = mcp2515_rx_status();
+	printf("status is %d\n\r", status);
+	
+	CAN_message_t received_msg = CAN_receive();
+	printf("I received id: %d data: %d\n\r", received_msg.id[1] >> 5, received_msg.data[7]);
+
 	//loop();
 	
 	/*
