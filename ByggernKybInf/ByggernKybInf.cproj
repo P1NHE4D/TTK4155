@@ -154,6 +154,12 @@
     <Compile Include="drivers\adc.h">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="drivers\mcp2515.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="drivers\mcp2515.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="drivers\menu.c">
       <SubType>compile</SubType>
     </Compile>

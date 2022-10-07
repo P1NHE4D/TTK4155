@@ -18,6 +18,7 @@
 #include "drivers/oled.h"
 #include "drivers/menu.h"
 #include "drivers/spi.h"
+#include "drivers/mcp2515.h"
 
 #include <stdint.h>
 #include <stdio.h>
@@ -38,7 +39,13 @@ void init() {
 	adc_init();
 	OLED_init();
 	user_controls_init();
+	/* MCP2515 calls this for us
 	SPI_init();
+	*/
+	mcp2515_init();
+	uint8_t to_send = 47;
+	mcp2515_write(MCP_TXB0CTRL+10, &to_send, 1);
+	printf("we read %d", mcp2515_read(MCP_TXB0CTRL+10));
 	
 	//read_user_controls();
 }
