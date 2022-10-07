@@ -9,15 +9,19 @@
 #ifndef CAN_H_
 #define CAN_H_
 
+#include <stdbool.h>
+
 typedef struct {
-	uint8_t id[5];
+	uint16_t id;
+	bool rtr;
+	uint8_t dlc;
 	uint8_t data[8];
-} CAN_message_t;
+} CAN_standard_message_t;
 
 void CAN_init();
 
-void CAN_send(CAN_message_t msg);
+void CAN_send(CAN_standard_message_t msg);
 
-CAN_message_t CAN_receive();
+CAN_standard_message_t CAN_receive();
 
 #endif /* CAN_H_ */

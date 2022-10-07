@@ -219,33 +219,23 @@ int main(void) {
 	uint8_t status = mcp2515_rx_status();
 	printf("status before doing anything is is %d\n\r", status);
 
-	
-	CAN_message_t msg;
-	// TXBnSIDH bits 7-0 contain SID bits 10-3
-	msg.id[0] = 0;
-	// TXBnSIDL bits...
-	// * 7-5 contain SID bits 2-0
-	// * 3 contains EXIDE
-	// * 1-0 contain EID17-16
-	msg.id[1] = (3<<5);
-	// ...middle bytes of ID bits are for extended, which we don't care about :) ...
-	// TXBnDLC bits...
-	// * 6 bit contains RTR
-	// * 3-0 contain DLC 3-0
-	msg.id[4] = 0b00001111;
-	
-	// TXBnDm contain the data... Send the number 3 as data
+	CAN_standard_message_t msg;
+	msg.id = 3;
+	msg.rtr = 0;
+	msg.dlc = 8;
 	msg.data[7] = 5;
-	
-	printf("I sent id: %d data: %d\n\r", msg.id[1] >> 5, msg.data[7]);
+		
+	printf("I sent id: %d data: %d\n\r", msg.id, msg.data[7]);
 	
 	CAN_send(msg);
+	
+	_delay_ms(200);
 		
 	status = mcp2515_rx_status();
 	printf("status is %d\n\r", status);
 	
-	CAN_message_t received_msg = CAN_receive();
-	printf("I received id: %d data: %d\n\r", received_msg.id[1] >> 5, received_msg.data[7]);
+	CAN_standard_message_t received_msg = CAN_receive();
+	printf("I received id: %d data: %d\n\r", received_msg.id, received_msg.data[7]);
 
 	//loop();
 	

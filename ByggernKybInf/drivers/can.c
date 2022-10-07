@@ -17,7 +17,8 @@ void CAN_init() {
 	mcp2515_init();
 }
 
-void CAN_send(CAN_message_t msg) {
+
+void CAN_send(CAN_standard_message_t msg) {
 	// check if transmission is ongoing		
 	while (true) {
 		uint8_t control_register = mcp2515_read(MCP_TXB0CTRL, 1)[0];
@@ -35,13 +36,24 @@ void CAN_send(CAN_message_t msg) {
 	
 	// construct CAN message buffer	
 	uint8_t tx_buffer[14];
-	for (int i = 0; i < 5; i++) {
-		tx_buffer[i+1] = msg.id[i];
-	}
-	for (int i = 0; i < 8; i++) {
-		tx_buffer[i+6] = msg.data[i];
-	}
 	
+	// TXBnSIDH bits 7-0 contain SID bits 10-3
+	tx_buffer[1] = msg.id >> 3;
+	// TXBnSIDL bits...
+	// * 7-5 contain SID bits 2-0
+	// * 3 contains EXIDE
+	// * 1-0 contain EID17-16
+	tx_buffer[2] = msg.id << 5;
+	// ...middle bytes of ID bits are for extended, which we don't care about :) ...
+	// TXBnDLC bits...
+	// * 6 bit contains RTR
+	// * 3-0 contain DLC 3-0
+	tx_buffer[5] = (msg.rtr<<6)|(0b1111 & msg.dlc);
+	// TXBnDm contain the data...
+	for (int i = 0; i < msg.dlc; i++) {
+			tx_buffer[6+i] = msg.data[i];
+	}
+		
 	// send CAN message
 	mcp2515_write(MCP_TXB0CTRL, tx_buffer, 14);
 
@@ -57,22 +69,35 @@ void CAN_send(CAN_message_t msg) {
 	}
 }
 
-CAN_message_t CAN_receive() {
+CAN_standard_message_t CAN_receive() {
 	// dumb implementation for now: just return whatever is in the rx0 buffer
 		
-	CAN_message_t received_msg;
 	
 	uint8_t* ptr_rx_buffer = mcp2515_read(MCP_RXB0CTRL, 14);
-		
-	for (int i = 0; i < 5; i++) {
-		received_msg.id[i] = ptr_rx_buffer[i+1];
-	}
 	
-	for (int i = 0; i < 8; i++) {
-		received_msg.data[i] = ptr_rx_buffer[i+6];
+	CAN_standard_message_t received_msg;
+		
+	// SID 10 to 3 are in TXBnSIDH bits 7-0, and SID 2-0 are in TXBnSIDL 7-5
+	received_msg.id = (ptr_rx_buffer[1] << 3)|(ptr_rx_buffer[2] >> 5);
+	// TXBnDLC bits...
+	// * 6 bit contains RTR
+	// * 3-0 contain DLC 3-0
+	received_msg.rtr = (ptr_rx_buffer[5] & (1<<6) >> 6);
+	received_msg.dlc = (ptr_rx_buffer[5] & 0b1111);
+	// TXBnDm contain the data...
+	for (int i = 0; i < received_msg.dlc; i++) {
+		received_msg.data[i] = ptr_rx_buffer[6+i];
 	}
 	
 	free(ptr_rx_buffer);
+	
+	// TODO is this needed? why do we sometimes read the previously written message?
+	// clear CANINTF.RX0IF bit to indicate the buffer has been read
+	mcp2515_bit_modify(
+		MCP_CANINTF,
+		1,
+		0
+	);
 	
 	return received_msg;
 }
