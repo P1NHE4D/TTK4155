@@ -166,6 +166,12 @@
     <Compile Include="drivers\oled.h">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="drivers\spi.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="drivers\spi.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="drivers\user_controls.c">
       <SubType>compile</SubType>
     </Compile>

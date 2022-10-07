@@ -17,6 +17,7 @@
 #include "drivers/user_controls.h"
 #include "drivers/oled.h"
 #include "drivers/menu.h"
+#include "drivers/spi.h"
 
 #include <stdint.h>
 #include <stdio.h>
@@ -37,6 +38,7 @@ void init() {
 	adc_init();
 	OLED_init();
 	user_controls_init();
+	SPI_init();
 	
 	//read_user_controls();
 }
@@ -208,7 +210,15 @@ void read_user_controls() {
 
 int main(void) {
 	init();
-	loop();
+	
+	while (1) {
+		PORTB &= ~(1<<PINB4);
+		SPI_transmit(1);
+		PORTB |= (1<<PINB4);
+
+	}
+	
+	//loop();
 	
 	/*
 	Exercise 3 task 5:
