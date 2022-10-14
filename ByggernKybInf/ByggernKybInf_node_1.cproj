@@ -13,7 +13,7 @@
     <OutputFileExtension>.elf</OutputFileExtension>
     <OutputDirectory>$(MSBuildProjectDirectory)\$(Configuration)</OutputDirectory>
     <AssemblyName>ByggernKybInf</AssemblyName>
-    <Name>ByggernKybInf</Name>
+    <Name>ByggernKybInf_Node_1</Name>
     <RootNamespace>ByggernKybInf</RootNamespace>
     <ToolchainFlavour>Native</ToolchainFlavour>
     <KeepTimersRunning>true</KeepTimersRunning>
