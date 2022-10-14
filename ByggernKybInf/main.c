@@ -49,53 +49,66 @@ void init() {
 }
 
 void loop() {
+	volatile menu_node_t *ext_mem = (char*) 0x1800;
+	
 	menu_node_t* main_node = malloc(sizeof(menu_node_t));
-	main_node->name = strdup("Main menu");
+	strcpy(main_node->name, "Main menu");
 	main_node->children_count = 3;
 	main_node->parent = NULL;
+	memcpy(ext_mem, main_node, sizeof(menu_node_t));
+	free(main_node);
 	
 	menu_node_t* play_node = malloc(sizeof(menu_node_t));
-	play_node->parent = main_node;
-	play_node->name = strdup("Play");
+	play_node->parent = ext_mem;
+	strcpy(play_node->name, "Play");
 	play_node->children_count = 0;
-
+	memcpy(ext_mem + 1, play_node, sizeof(menu_node_t));
+	free(play_node);
 	
 	menu_node_t* highscore_node = malloc(sizeof(menu_node_t));
-	highscore_node->parent = main_node;
-	highscore_node->name = strdup("High score");
+	highscore_node->parent = ext_mem;
+	strcpy(play_node->name, "High Score");
 	highscore_node->children_count = 0;
+	memcpy(ext_mem + 2, play_node, sizeof(menu_node_t));
+	free(highscore_node);
 	
 	menu_node_t* character_node = malloc(sizeof(menu_node_t));
-	character_node->parent = main_node;
-	character_node->name = strdup("Characters");
+	character_node->parent = ext_mem;
+	strcpy(play_node->name, "Characters");
 	character_node->children_count = 3;
+	memcpy(ext_mem + 3, play_node, sizeof(menu_node_t));
+	free(character_node);
+	
+	ext_mem->children[0] = ext_mem + 1;
+	ext_mem->children[1] = ext_mem + 2;
+	ext_mem->children[2] = ext_mem + 3;
 	
 	menu_node_t* marte_node = malloc(sizeof(menu_node_t));
-	marte_node->parent = character_node;
-	marte_node->name = strdup("Marte");
+	marte_node->parent = ext_mem + 3;
+	strcpy(play_node->name, "Marte");
 	marte_node->children_count = 0;
-
+	memcpy(ext_mem + 4, marte_node, sizeof(menu_node_t));
+	free(marte_node);
+	
 	menu_node_t* alexander_node = malloc(sizeof(menu_node_t));
-	alexander_node->parent = character_node;
-	alexander_node->name = strdup("Alexander");
+	alexander_node->parent = ext_mem + 3;
+	strcpy(play_node->name, "Alexander");
 	alexander_node->children_count = 0;
-
+	memcpy(ext_mem + 5, alexander_node, sizeof(menu_node_t));
+	free(alexander_node);
+	
 	menu_node_t* thomas_node = malloc(sizeof(menu_node_t));
-	thomas_node->parent = character_node;
-	thomas_node->name = strdup("Thomas");
+	thomas_node->parent = ext_mem + 3;
+	strcpy(play_node->name, "Thomas");
 	thomas_node->children_count = 0;
+	memcpy(ext_mem + 6, thomas_node, sizeof(menu_node_t));
+	free(thomas_node);
 	
-	character_node->children[0] = marte_node;
-	character_node->children[1] = alexander_node;
-	character_node->children[2] = thomas_node;
-
-
+	(ext_mem + 3)->children[0] = ext_mem + 4;
+	(ext_mem + 3)->children[1] = ext_mem + 5;
+	(ext_mem + 3)->children[2] = ext_mem + 6;
 	
-	main_node->children[0] = play_node;
-	main_node->children[1] = highscore_node;
-	main_node->children[2] = character_node;
-	
-	
+	main_node = ext_mem;
 	uint8_t cursor_child = 0;
 	
 	stdout = &OLED_STREAM;
@@ -127,14 +140,14 @@ void loop() {
 			button_clicked = true;
 			if (cursor_child < current_menu->children_count) {
 				current_menu = current_menu->children[cursor_child];
-			} else {
+				} else {
 				// go back
 				current_menu = current_menu->parent;
 			}
 			should_refresh = true;
 			cursor_child = 0;
 			OLED_reset();
-		} else if (!is_button_pressed) {
+			} else if (!is_button_pressed) {
 			button_clicked = false;
 		}
 		
@@ -144,19 +157,19 @@ void loop() {
 			cursor_child = 0 > cursor_child - 1 ? 0 : cursor_child - 1;
 			engaged = true;
 			should_refresh = true;
-		} else if (direction == DOWN && !engaged) {
+			} else if (direction == DOWN && !engaged) {
 			cursor_child = lines_with_back - 1 < cursor_child + 1 ? lines_with_back - 1 : cursor_child + 1;
 			engaged = true;
 			should_refresh = true;
-		} else if (direction == NEUTRAL){
-			engaged = false; 
+			} else if (direction == NEUTRAL){
+			engaged = false;
 		}
 		
 		if (!should_refresh) {
 			continue;
 		}
 		
-	
+		
 		stdout = &OLED_STREAM;
 		uint8_t current_line = 0;
 		OLED_goto_line(current_line);
@@ -165,13 +178,13 @@ void loop() {
 			OLED_goto_line(++current_line);
 			if(cursor_child == i) {
 				printf("> ");
-			} else {
+				} else {
 				printf("  ");
 			}
 			
 			if (i < current_menu->children_count) {
 				printf(current_menu->children[i]->name);
-			} else {
+				} else {
 				printf("Back");
 			}
 		}
@@ -237,7 +250,7 @@ int main(void) {
 	CAN_standard_message_t received_msg = CAN_receive();
 	printf("I received id: %d data: %d\n\r", received_msg.id, received_msg.data[7]);
 
-	//loop();
+	loop();
 	
 	/*
 	Exercise 3 task 5:

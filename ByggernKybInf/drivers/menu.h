@@ -13,7 +13,7 @@
 
 typedef struct menu_node_t {
 	struct menu_node_t* parent;
-	char* name;
+	char name[128];
 	void (*on_click)();
 	uint8_t children_count;
 	struct menu_node_t* children[8];
