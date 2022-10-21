@@ -34,18 +34,85 @@ void mcp2515_init() {
 	}
 	stdout = &UART_STREAM;
 	
+	// TA har 3 og 41 (:
+	// delte opp i 16
+	// proparg 1
+	
+	// set CAN bit timings (while we are in configuration mode)
+
+	// cnf1
+	uint8_t sjw = 0;     // re-synchronization jump width
+	uint8_t brp = 1;     // (TA: 3) baudrate prescaler            (1/500000)/((2*(x+1))/16000000) = 8 OR (2*(x+1)/16000000 = (1/500000)/8
+	
+	// cnf2
+	uint8_t sam = 0;     // sampling mode (just has to be the same as on node 1) (assuming this is the same as "smp")
+	uint8_t btlmode = 1; // "if this bit is set to 1 the length of PS2 is determined by the PHSEG2 of CNF3"
+	uint8_t phseg1 = 3;  //  (TA: 6)
+	uint8_t prseg = 0;   // (TA: 1) programming time segment      (1.66) (assume same as "propag")
+
+	// cnf3
+	uint8_t sof = 0;     // "If CANCTRL.CLKEN = 0, Bit is don't care"
+	uint8_t wakfil = 0;  // TODO what is this?
+	uint8_t phseg2 = 3;  // (TA: 5) TODO what is this?
+
+	uint8_t cnf1 = 0
+		| ((sjw & 0b11)     << 6)
+		| ((brp & 0b111111) << 0)
+		;
+	
+	uint8_t cnf2 = 0
+		| ((btlmode & 0b1)     << 7)
+		| ((sam & 0b1)         << 6)
+		| ((phseg1 & 0b111)    << 3)
+		| ((prseg & 0b111)     << 0)
+		;
+	
+	uint8_t cnf3 = 0
+		| ((sof & 0b1)         << 7)
+		| ((wakfil & 0b1)      << 6)
+		| ((phseg2 & 0b111)    << 0)
+		;
+	
+	// set cnf1, cnf2, cnf3 in mcp2515
+	// TODO is this OK? no. Go away.
+	
+	
+	mcp2515_write(MCP_CNF1, &cnf1, 1);
+	mcp2515_write(MCP_CNF2, &cnf2, 1);
+	mcp2515_write(MCP_CNF3, &cnf3, 1);
+	
+	/*
+	uint8_t cnf1_ta = 0b0000011;
+	mcp2515_write(MCP_CNF1, &cnf1_ta, 1);
+	uint8_t cnf2_ta = 0b10110001;
+	mcp2515_write(MCP_CNF2, &cnf2_ta, 1);
+	uint8_t cnf3_ta = 0b00000101;
+	mcp2515_write(MCP_CNF3, &cnf3_ta, 1);
+	*/
+	
+	uint8_t* value_cnf1 = mcp2515_read(MCP_CNF1, 1);
+	uint8_t* value_cnf2 = mcp2515_read(MCP_CNF2, 1);
+	uint8_t* value_cnf3 = mcp2515_read(MCP_CNF3, 1);
+	
+	printf("What was written to CNF1 CNF2 CNF3: %d %d %d\n\r", *value_cnf1, *value_cnf2, *value_cnf3);
+	
+			
 	// Select loopback
 	
 	mcp2515_bit_modify(
 		MCP_CANCTRL,
 		7<<5,        // 3 MSB, REQOP<0:2>
-		1<<6         // REQOP1
+		0<<6         // REQOP1
 	);
 			
 	value = mcp2515_read(MCP_CANSTAT, 1)[0];
 	if ((value & MODE_MASK) != MODE_LOOPBACK) {
-		printf("MCP2515 is NOT in loopback mode after setting it during init!\n");
+		printf("MCP2515 is NOT in loopback mode after setting it during init!\n\r");
 	}
+	if ((value & MODE_MASK) != MODE_NORMAL) {
+		printf("MCP2515 is NOT in normal mode after setting it during init!\n\r");
+	}
+	
 }
 
 void mcp2515_reset() {

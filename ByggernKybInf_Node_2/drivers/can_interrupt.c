@@ -17,7 +17,7 @@
 
 #include "can_controller.h"
 
-#define DEBUG_INTERRUPT 0
+#define DEBUG_INTERRUPT 1
 
 /**
  * \brief CAN0 Interrupt handler for RX, TX and bus error interrupts
@@ -28,7 +28,7 @@
  */
 void CAN0_Handler( void )
 {
-	if(DEBUG_INTERRUPT)printf("CAN0 interrupt\n\r");
+	//if(DEBUG_INTERRUPT)printf("CAN0 interrupt\n\r");
 	char can_sr = CAN0->CAN_SR; 
 	
 	//RX interrupt
@@ -50,8 +50,8 @@ void CAN0_Handler( void )
 			printf("CAN0 message arrived in non-used mailbox\n\r");
 		}
 
-		if(DEBUG_INTERRUPT)printf("message id: %d\n\r", message.id);
-		if(DEBUG_INTERRUPT)printf("message data length: %d\n\r", message.data_length);
+		//if(DEBUG_INTERRUPT)printf("message id: %d\n\r", message.id);
+		//if(DEBUG_INTERRUPT)printf("message data length: %d\n\r", message.data_length);
 		for (int i = 0; i < message.data_length; i++)
 		{
 			if(DEBUG_INTERRUPT)printf("%d ", message.data[i]);
@@ -61,7 +61,7 @@ void CAN0_Handler( void )
 	
 	if(can_sr & CAN_SR_MB0)
 	{
-		if(DEBUG_INTERRUPT) printf("CAN0 MB0 ready to send \n\r");
+		//if(DEBUG_INTERRUPT) printf("CAN0 MB0 ready to send \n\r");
 		
 	//Disable interrupt
 		CAN0->CAN_IDR = CAN_IER_MB0;

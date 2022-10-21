@@ -231,25 +231,39 @@ int main(void) {
 	
 	uint8_t status = mcp2515_rx_status();
 	printf("status before doing anything is is %d\n\r", status);
-
-	CAN_standard_message_t msg;
+	
+	/*CAN_standard_message_t msg;
 	msg.id = 3;
 	msg.rtr = 0;
 	msg.dlc = 8;
-	msg.data[7] = 5;
+	msg.data[0] = 5;
+	
+	printf("I sent id: %d data: %d\n\r", msg.id, msg.data[0]);
+	CAN_send(msg);*/
+	while(1){
+		CAN_standard_message_t msg;
+		msg.id = 13;
+		msg.rtr = 0;
+		msg.dlc = 2;
 		
-	printf("I sent id: %d data: %d\n\r", msg.id, msg.data[7]);
+		pos_t joystick_pos = read_joystick_position();
+		printf("x: %d  y: %d\n\r", joystick_pos.x, joystick_pos.y);
+		msg.data[0] = joystick_pos.x + 100;
+		msg.data[1] = joystick_pos.y + 100;
+		
+		CAN_send(msg);
+	}
 	
-	CAN_send(msg);
 	
+	/*
 	_delay_ms(200);
-		
+	
 	status = mcp2515_rx_status();
 	printf("status is %d\n\r", status);
 	
 	CAN_standard_message_t received_msg = CAN_receive();
-	printf("I received id: %d data: %d\n\r", received_msg.id, received_msg.data[7]);
-
+	printf("I received id: %d data: %d\n\r", received_msg.id, received_msg.data[0]);
+	*/
 	loop();
 	
 	/*
