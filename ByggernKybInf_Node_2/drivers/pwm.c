@@ -93,8 +93,8 @@ void pwm_init() {
 	// from the datasheet:
 	//   "This value must be defined between 0 and CPRD (PWM_CPRx)
 	// Initialize to duty cycle of 1.5 ms
-	// 0.5 = ((20 * 10^-3 - (1/2000000) * x)/(20*10^-3)), solve for x
-	uint32_t cdty = 20000;
+	// ((1.5 * 10^-3) / (20 * 10^-3)) * crpd
+	uint32_t cdty = 3000;
 	REG_PWM_CDTY5 |= cdty;
 	
 	// PWM Enable Register. TA quote: "enable the PWM channel in the PWM
