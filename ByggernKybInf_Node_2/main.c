@@ -10,12 +10,14 @@
 #include "sam.h"
 #include "drivers/uart.h"
 #include "drivers/can_controller.h"
+#include "drivers/pwm.h"
 
 
 int main(void)
 {
     /* Initialize the SAM system */
 	SystemInit();
+	pwm_init();
 	
 	// disable watchdog
 	// TODO
