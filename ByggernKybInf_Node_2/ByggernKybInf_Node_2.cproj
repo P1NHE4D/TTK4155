@@ -165,6 +165,12 @@
     <Compile Include="Device_Startup\system_sam3xa.c">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="drivers\adc.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="drivers\adc.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="drivers\can_controller.c">
       <SubType>compile</SubType>
     </Compile>
@@ -187,6 +193,12 @@
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="drivers\pwm.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="drivers\timer.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="drivers\timer.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="drivers\uart.c">

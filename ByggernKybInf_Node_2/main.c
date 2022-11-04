@@ -11,6 +11,7 @@
 #include "drivers/uart.h"
 #include "drivers/can_controller.h"
 #include "drivers/pwm.h"
+#include "drivers/can_interrupt.h"
 
 
 int main(void)
@@ -18,10 +19,11 @@ int main(void)
     /* Initialize the SAM system */
 	SystemInit();
 	pwm_init();
-	pwm_set_duty_cycle(13);
+	adc_init();
 	
 	// disable watchdog
-	// TODO
+	//PMC->PMC_PCER0 &= ~(1<<4);
+	WDT->WDT_MR = WDT_MR_WDDIS;
 		
 	// clock signal enable for peripherals
 	PMC->PMC_PCER0 |= PMC_PCER0_PID11;
@@ -79,20 +81,28 @@ int main(void)
 		uart_putchar('d');
 	} else {
 		/* Replace with your application code */
-		/*
-		uint8_t status1;
-		uint8_t status2;
-		CAN_MESSAGE can_msg1;
-		CAN_MESSAGE can_msg2;
-		while (1) {
-			status1 = can_receive(&can_msg1, 1);
-			status2 = can_receive(&can_msg2, 2);
-			//printf("status1,2 %d %d\n\r", status1, status2);
-			if ((status1 == 0) || (status2 == 0)) {
-				printf("1 (status: %d id: %d data[7]: %d) 2 (status: %d id: %d data[7]: %d)\n\r",
-					status1, can_msg1.id, can_msg1.data[7],
-					status2, can_msg2.id, can_msg2.data[7]);
+		uint32_t score = 0;
+		uint8_t thr = 2000;
+		
+		for (int i = 0;; i++) {
+			// read joystick position from global
+			// variable (set by interrupt) and modify
+			// duty cycle
+			uint8_t duty_cycle_e2 = ((200 - joystick_position_x) / (200/(21-9))) + 9;
+			pwm_set_duty_cycle(duty_cycle_e2);
+			
+			uint16_t result = adc_read();
+
+			if (result > thr) {
+				if (i % 100000 == 0) {
+					score += 1;
+					printf("score: %d \n\r", score);	
+				}
+			} else {
+				printf("u suck, u got %d points \n\r", score);
+				break;
 			}
-		}*/
+
+		}
 	}
 }
