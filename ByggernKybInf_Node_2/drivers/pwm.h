@@ -9,7 +9,12 @@
 #ifndef PWM_H_
 #define PWM_H_
 
+uint32_t cprd;
+uint32_t period_ms;
+
 void pwm_init();
+
+void pwm_set_duty_cycle(uint8_t duty_cycle_ms_e2);
 
 
 

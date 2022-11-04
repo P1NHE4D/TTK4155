@@ -18,6 +18,7 @@ int main(void)
     /* Initialize the SAM system */
 	SystemInit();
 	pwm_init();
+	pwm_set_duty_cycle(13);
 	
 	// disable watchdog
 	// TODO

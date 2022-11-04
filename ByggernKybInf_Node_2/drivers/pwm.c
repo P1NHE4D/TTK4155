@@ -6,6 +6,7 @@
  */
 
 #include "sam.h"
+#include "pwm.h"
 
 
 void pwm_init() {
@@ -86,8 +87,10 @@ void pwm_init() {
 	//   the resulting period formula will be ((X * CPRD) / MCK).
 	// The period must be 20 ms so solve the formula
 	// ((X * CPRD) / MCK) = 50ms for CPRD
-	uint32_t cprd = 40000;
+	cprd = 40000;
 	REG_PWM_CPRD5 |= cprd;
+	
+	period_ms = 20;
 	
 	// PWM Channel Duty Cycle Register. TA quote: "set to desired value(s)"
 	// from the datasheet:
@@ -95,9 +98,30 @@ void pwm_init() {
 	// Initialize to duty cycle of 1.5 ms
 	// ((1.5 * 10^-3) / (20 * 10^-3)) * crpd
 	uint32_t cdty = 3000;
-	REG_PWM_CDTY5 |= cdty;
+	REG_PWM_CDTY5 = cdty;
 	
 	// PWM Enable Register. TA quote: "enable the PWM channel in the PWM
 	// Enable Register"
 	PWM->PWM_ENA |= PWM_ENA_CHID5;
+}
+
+// parameter is the duty cycle in ms * 10. It is clamped to be in the
+// interval [9,21]. It is specified as * 10 to avoid using
+// floating-point numbers
+void pwm_set_duty_cycle(uint8_t duty_cycle_ms_e2) {
+	uint32_t clamped_duty_cycle_ms_e2 = duty_cycle_ms_e2;
+	
+	if (clamped_duty_cycle_ms_e2 < 9) {
+		clamped_duty_cycle_ms_e2 = 9;
+	}
+	if (clamped_duty_cycle_ms_e2 > 21) {
+		clamped_duty_cycle_ms_e2 = 21;
+	}
+	
+	uint32_t cdty = (clamped_duty_cycle_ms_e2 * cprd) / period_ms / 10;
+	
+	// use the ...CDTYUPDx register instead of the ...CDTY register because
+	// it: "acts as a double buffer for the CDTY value. This prevents an
+	// unexpected waveform when modifying the waveform duty-cycle"
+	REG_PWM_CDTYUPD5 = cdty;
 }
