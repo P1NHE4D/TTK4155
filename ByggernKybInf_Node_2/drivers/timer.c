@@ -10,15 +10,21 @@
 #define FREQ 84000000
 
 void timer_init() {
-	// ...
-	//struct TcChannel->TC_CCR |= TC_CCR_CLKEN;
-	//struct TcChannel->TC_CMR |= TC_CMR_TCCLKS_TIMER_CLOCK1;
+	// enable clock for TC0
+	PMC->PMC_PCER0 |= PMC_PCER0_PID27;
+	// enable timer
+	REG_TC0_CCR0 |= (TC_CCR_CLKEN | TC_CCR_SWTRG);
+	// set clock mode to MCK/2
+	REG_TC0_CMR0 |= TC_CMR_TCCLKS_TIMER_CLOCK4;
+	// check if clock is enabled
+	if (!(REG_TC0_SR0 & TC_SR_CLKSTA)) {
+		printf("Clock disabled!\n\r");
+	}
 }
 
 uint32_t clock() {
-	//uint32_t clock_read = TcChannel->TC_CV[0];
-	//return clock_read / (FREQ / 2);
-	
-	// read register
-	// return (read value * 1000) / (FREQ / 2)
+	// read value
+	uint32_t clock_read = REG_TC0_CV0;
+	// return time in seconds
+	return (clock_read) / (FREQ / 128);
 }

@@ -13,9 +13,12 @@
 #define CAN_INTERRUPT_H_
 
 #include <stdint.h>
+#include <stdbool.h>
 
 extern uint8_t joystick_position_x;
 extern uint8_t joystick_position_y;
+extern bool button_pressed;
+
 
 void CAN0_Handler       ( void );
 

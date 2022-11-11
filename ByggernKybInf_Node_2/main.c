@@ -7,11 +7,36 @@
 
 
 #include <stdbool.h>
+#include <math.h>
 #include "sam.h"
 #include "drivers/uart.h"
 #include "drivers/can_controller.h"
 #include "drivers/pwm.h"
 #include "drivers/can_interrupt.h"
+#include "drivers/dac.h"
+#include "drivers/timer.h"
+
+
+int16_t read_encoder() {
+	// set OE to low
+	PIOD->PIO_CODR |= PIO_CODR_P0;
+	// set SEL to loooooow
+	PIOD->PIO_CODR |= PIO_CODR_P2;
+	// wait 20 microseconds
+	for(int i = 0; i < 10000; i++) {}
+	// read MJ2 high byte
+	uint8_t encoder_high_byte = (PIOC->PIO_PDSR & (PIO_PDSR_P1 | PIO_PDSR_P2 | PIO_PDSR_P3 | PIO_PDSR_P4 | PIO_PDSR_P5 | PIO_PDSR_P6 | PIO_PDSR_P7 | PIO_PDSR_P8)) >> 1;
+	// set SEL to high
+	PIOD->PIO_SODR |= PIO_SODR_P2;
+	// wait 20 microseconds
+	for(int i = 0; i < 10000; i++) {}
+	// read MJ2 low byte
+	uint8_t encoder_low_byte = (PIOC->PIO_PDSR & (PIO_PDSR_P1 | PIO_PDSR_P2 | PIO_PDSR_P3 | PIO_PDSR_P4 | PIO_PDSR_P5 | PIO_PDSR_P6 | PIO_PDSR_P7 | PIO_PDSR_P8)) >> 1;
+	// set to OE to HIGH
+	PIOD->PIO_SODR |= PIO_SODR_P0;
+	
+	return (encoder_high_byte << 8) | encoder_low_byte;
+}
 
 
 int main(void)
@@ -42,10 +67,68 @@ int main(void)
     PIOA->PIO_SODR |= PIO_SODR_P19 | PIO_SODR_P20;
 	
 	// Appears as com10 in putty, with baud rate 9600, stop bits 2, parity None
-	configure_uart();
 	
+	// needs to happen after uart, since there is debug output
+	dac_init();
+	configure_uart();
+	timer_init();
+	printf("foo\n\r");
 
 	printf("Starting...\n\r");
+	
+	/* configure enable pin of mj1 */
+	
+		
+	// enable PIOD
+	PMC->PMC_PCER0 |= PMC_PCER0_PID14;
+	
+	// Pin Enable Register
+	PIOD->PIO_PER |= (PIO_PER_P9 | PIO_PER_P10 | PIO_PER_P3 | PIO_PER_P0 | PIO_PER_P2 | PIO_PER_P0 | PIO_PER_P1);
+	
+	// Output Enable Register
+	PIOD->PIO_OER |= (PIO_OER_P9 | PIO_OER_P10 | PIO_OER_P3 | PIO_OER_P2 | PIO_OER_P0 | PIO_PER_P1);
+	
+	// Clear Output Data Register
+	PIOD->PIO_CODR |= (PIO_CODR_P9 | PIO_CODR_P10 | PIO_CODR_P3);
+	
+	// reset encoder
+	PIOD->PIO_CODR |= PIO_CODR_P1;
+	for(int i = 0; i < 10000; i++) {}
+	PIOD->PIO_SODR |= PIO_SODR_P1;
+	
+	
+	
+	/* enable PIOC */
+	PMC->PMC_PCER0 |= PMC_PCER0_PID13;
+	
+	/*  PIN enable register */
+	PIOC->PIO_PER |= (PIO_PER_P1 | PIO_PER_P2 | PIO_PER_P3 | PIO_PER_P4 | PIO_PER_P5 | PIO_PER_P6 | PIO_PER_P7 | PIO_PER_P8);
+	
+	/*
+	
+	// Set Output Data Register
+	PIOD->PIO_SODR |= (PIO_SODR_P9 | PIO_SODR_P10);
+	
+	uint16_t value_to_convert = pow(2, 12) - 1;
+	
+	PIOD->PIO_CODR |= PIO_CODR_P10;
+	for (int i = 0; i < 100000; i++) {
+		dac_convert(value_to_convert);
+	}
+	PIOD->PIO_CODR |= PIO_CODR_P9;
+	//dac_convert(value_to_convert);
+	//dac_convert(value_to_convert);
+	*/
+
+
+	/*
+	while (true) {
+		printf("did convert\n\r");
+	}
+	while (true) {
+		printf("have converted\n\r");
+	}
+	*/
 	
 	/*
 	 * Build CAN_BR
@@ -83,22 +166,62 @@ int main(void)
 		/* Replace with your application code */
 		uint32_t score = 0;
 		uint8_t thr = 2000;
+		uint8_t cycle_thr = 1000;
+		
+		uint32_t blocked_cycles = 0;
 		
 		for (int i = 0;; i++) {
+			if (button_pressed) {
+				PIOD->PIO_CODR |= PIO_CODR_P3;
+			} else {
+				PIOD->PIO_SODR |= PIO_SODR_P3;
+			}
+			int16_t encoder_val = read_encoder();
+			printf("Encoder val: %d\n\r", encoder_val);
+			
 			// read joystick position from global
 			// variable (set by interrupt) and modify
 			// duty cycle
 			uint8_t duty_cycle_e2 = ((200 - joystick_position_x) / (200/(21-9))) + 9;
 			pwm_set_duty_cycle(duty_cycle_e2);
 			
-			uint16_t result = adc_read();
+			
+			// hacky hacky hacky ho, control trakc thingy with joystick_y
+			uint8_t middle = 100;
+			uint16_t speed;
+			if (joystick_position_y > middle) {
+				// left
+				speed = joystick_position_y - middle;
+				PIOD->PIO_CODR |= PIO_CODR_P10;
+			} else {
+				// right
+				speed = middle - joystick_position_y;
+				PIOD->PIO_SODR |= PIO_SODR_P10;
+			}				
+			if (speed < 20) {
+				PIOD->PIO_CODR |= PIO_CODR_P9;
+			} else {
+				PIOD->PIO_SODR |= PIO_SODR_P9;
+			}
 
+			dac_convert((speed + 55) << 4);
+
+			
+			uint16_t result = adc_read();
+			
 			if (result > thr) {
+				blocked_cycles = 0;
+			} else {
+				blocked_cycles += 1;
+			}
+			
+			if (blocked_cycles < cycle_thr) {
 				if (i % 100000 == 0) {
 					score += 1;
 					printf("score: %d \n\r", score);	
 				}
 			} else {
+				printf("adc is %d\n\r", result);
 				printf("u suck, u got %d points \n\r", score);
 				break;
 			}

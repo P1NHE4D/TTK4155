@@ -11,6 +11,7 @@
 #include "can_interrupt.h"
 
 #include <stdio.h>
+#include <stdbool.h>
 #include "sam.h"
 
 #include "../drivers/printf-stdarg.h"
@@ -22,6 +23,7 @@
 
 uint8_t joystick_position_x;
 uint8_t joystick_position_y;
+bool button_pressed;
 
 
 /**
@@ -68,6 +70,7 @@ void CAN0_Handler( void )
 		}
 		joystick_position_x = message.data[0];
 		joystick_position_y = message.data[1];
+		button_pressed = message.data[2];
 		
 		if(DEBUG_INTERRUPT)printf("x: %d y: %d", joystick_position_x, joystick_position_y);
 	

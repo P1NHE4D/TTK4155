@@ -244,12 +244,14 @@ int main(void) {
 		CAN_standard_message_t msg;
 		msg.id = 13;
 		msg.rtr = 0;
-		msg.dlc = 2;
+		msg.dlc = 3;
 		
 		pos_t joystick_pos = read_joystick_position();
-		printf("x: %d  y: %d\n\r", joystick_pos.x, joystick_pos.y);
+		bool button_pressed = read_button(JOYSTICK);
+		printf("x: %d  y: %d button: %d\n\r", joystick_pos.x, joystick_pos.y, button_pressed);
 		msg.data[0] = joystick_pos.x + 100;
 		msg.data[1] = joystick_pos.y + 100;
+		msg.data[2] = button_pressed;
 		
 		CAN_send(msg);
 	}
