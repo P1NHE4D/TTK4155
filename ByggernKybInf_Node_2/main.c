@@ -27,6 +27,7 @@ int main(void)
 	SystemInit();
 	pwm_init();
 	adc_init();
+
 	
 	// disable watchdog
 	//PMC->PMC_PCER0 &= ~(1<<4);
@@ -54,7 +55,6 @@ int main(void)
 	dac_init();
 	configure_uart();
 	timer_init();
-	printf("foo\n\r");
 
 	printf("Starting...\n\r");
 	
@@ -101,21 +101,10 @@ int main(void)
 	//dac_convert(value_to_convert);
 	//dac_convert(value_to_convert);
 	*/
-
-
-	/*
-	while (true) {
-		printf("did convert\n\r");
-	}
-	while (true) {
-		printf("have converted\n\r");
-	}
-	*/
 	
 	/*
 	 * Build CAN_BR
 	 */
-	
 	// components, each starting at LSB (must be shifted into CAN_BR)
 	uint32_t phase_2 = 3; // (TA: 5) phase 2 segment               phase_2 = (t_bit_time (8TQ) - T_prs - T_sync) / 2
 	uint32_t phase_1 = 3; // (TA: 6) phase 1 segment               phase_1 = (t_bit_time (8TQ) - T_prs - T_sync) / 2
@@ -138,85 +127,100 @@ int main(void)
 		;
 		
 	// can_br = 0x00290165;
-	
 	int status = can_init_def_tx_rx_mb(can_br);
 	if (status != 0) {
 		uart_putchar('b');
 		uart_putchar('a');
 		uart_putchar('d');
-	} else {
-		/* Replace with your application code */
-		uint32_t score = 0;
-		uint8_t thr = 2000;
-		uint8_t cycle_thr = 10;
-		
-		uint32_t blocked_cycles = 0;
-		calibrate_motor();
-		
-		for (int i = 0;; i++) {
-			if (button_pressed) {
-				PIOD->PIO_CODR |= PIO_CODR_P3;
-			} else {
-				PIOD->PIO_SODR |= PIO_SODR_P3;
-			}
-			current_encoder_value = read_encoder();
-			//printf("Encoder val: %d\n\r", encoder_val);
-			
-			// read joystick position from global
-			// variable (set by interrupt) and modify
-			// duty cycle
-			uint8_t duty_cycle_e2 = ((200 - joystick_position_x) / (200/(21-9))) + 9;
-			pwm_set_duty_cycle(duty_cycle_e2);
-			
-			
-			
-			// hacky hacky hacky ho, control trakc thingy with joystick_y
-			uint8_t middle = 100;
-			uint16_t speed;
-			if (joystick_position_y > middle) {
-				// left
-				speed = joystick_position_y - middle;
-				PIOD->PIO_CODR |= PIO_CODR_P10;
-			} else {
-				// right
-				speed = middle - joystick_position_y;
-				PIOD->PIO_SODR |= PIO_SODR_P10;
-			}			
-			if (speed < 20) {
-				PIOD->PIO_CODR |= PIO_CODR_P9;
-			} else {
-				PIOD->PIO_SODR |= PIO_SODR_P9;
-			}
-
-			dac_convert((speed + 55) << 4);
-			
-			
-			// set direction and speed from motor_speed (which is signed)
-			// uint16_t motor_actuation = motor_output;
-			// printf("actuation: %d\n\r");
-			// dac_convert(motor_actuation);
-
-			
-			uint16_t result = adc_read();
-			
-			if (result > thr) {
-				blocked_cycles = 0;
-			} else {
-				blocked_cycles += 1;
-			}
-			
-			if (blocked_cycles < cycle_thr) {
-				if (i % 1000 == 0) {
-					score += 1;
-					printf("score: %d \n\r", score);
-					printf("adc is %d\n\r", result);
-				}
-			} else {
-				printf("adc is %d\n\r", result);
-				printf("u suck, u got %d points \n\r", score);
-				break;
-			}
-
+	}
+	while (1) {
+		if (can_msg_id == 5) {	
+			play_game();
 		}
+	}
+}
+
+void play_game() {
+	/* Replace with your application code */
+	uint32_t score = 0;
+	uint8_t thr = 2000;
+	uint8_t cycle_thr = 10;
+	
+	uint32_t blocked_cycles = 0;
+	calibrate_motor();
+	
+	for (int i = 0;; i++) {
+		if (button_pressed) {
+			PIOD->PIO_CODR |= PIO_CODR_P3;
+			} else {
+			PIOD->PIO_SODR |= PIO_SODR_P3;
+		}
+		current_encoder_value = read_encoder();
+		//printf("Encoder val: %d\n\r", encoder_val);
+		
+		// read joystick position from global
+		// variable (set by interrupt) and modify
+		// duty cycle
+		uint8_t duty_cycle_e2 = ((200 - joystick_position_x) / (200/(21-9))) + 9;
+		pwm_set_duty_cycle(duty_cycle_e2);
+		
+		
+		
+		// hacky hacky hacky ho, control trakc thingy with joystick_y
+		uint8_t middle = 100;
+		uint16_t speed;
+		if (joystick_position_y > middle) {
+			// left
+			speed = joystick_position_y - middle;
+			PIOD->PIO_CODR |= PIO_CODR_P10;
+			} else {
+			// right
+			speed = middle - joystick_position_y;
+			PIOD->PIO_SODR |= PIO_SODR_P10;
+		}
+		if (speed < 20) {
+			PIOD->PIO_CODR |= PIO_CODR_P9;
+			} else {
+			PIOD->PIO_SODR |= PIO_SODR_P9;
+		}
+
+		dac_convert((speed + 55) << 4);
+		
+		
+		// set direction and speed from motor_speed (which is signed)
+		// uint16_t motor_actuation = motor_output;
+		// printf("actuation: %d\n\r");
+		// dac_convert(motor_actuation);
+
+		
+		uint16_t result = adc_read();
+		
+		if (result > thr) {
+			blocked_cycles = 0;
+			} else {
+			blocked_cycles += 1;
+		}
+		
+		CAN_MESSAGE can_msg;
+		can_msg.data[3] = score >> 3;
+		can_msg.data[2] = score >> 2;
+		can_msg.data[1] = score >> 1;
+		can_msg.data[0] = score;
+		can_msg.data_length = 4;
+		if (blocked_cycles < cycle_thr) {
+			if (i % 1000 == 0) {
+				score += 1;
+				printf("score: %d \n\r", score);
+				printf("adc is %d\n\r", result);
+			}
+			} else {
+			printf("adc is %d\n\r", result);
+			printf("u suck, u got %d points \n\r", score);
+			can_msg.id = 1;
+			can_send(&can_msg, 0);
+			return;
+		}
+		can_msg.id = 11;
+		can_send(&can_msg, 0);
 	}
 }

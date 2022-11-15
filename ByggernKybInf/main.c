@@ -31,6 +31,8 @@
 #define F_CPU FOSC
 #include <util/delay.h>
 
+void play_game();
+
 
 void init() {
 	UART_init(COMPUTED_UBRR);
@@ -48,12 +50,16 @@ void init() {
 	//read_user_controls();
 }
 
+
+
 void loop() {
+	
+	
 	volatile menu_node_t *ext_mem = (char*) 0x1800;
 	
 	menu_node_t* main_node = malloc(sizeof(menu_node_t));
 	strcpy(main_node->name, "Main menu");
-	main_node->children_count = 3;
+	main_node->children_count = 1;
 	main_node->parent = NULL;
 	memcpy(ext_mem, main_node, sizeof(menu_node_t));
 	free(main_node);
@@ -62,9 +68,13 @@ void loop() {
 	play_node->parent = ext_mem;
 	strcpy(play_node->name, "Play");
 	play_node->children_count = 0;
+	play_node->on_click = play_game;
 	memcpy(ext_mem + 1, play_node, sizeof(menu_node_t));
 	free(play_node);
+	ext_mem->children[0] = ext_mem + 1;
 	
+
+	/*
 	menu_node_t* highscore_node = malloc(sizeof(menu_node_t));
 	highscore_node->parent = ext_mem;
 	strcpy(play_node->name, "High Score");
@@ -107,7 +117,7 @@ void loop() {
 	(ext_mem + 3)->children[0] = ext_mem + 4;
 	(ext_mem + 3)->children[1] = ext_mem + 5;
 	(ext_mem + 3)->children[2] = ext_mem + 6;
-	
+	*/
 	main_node = ext_mem;
 	uint8_t cursor_child = 0;
 	
@@ -140,6 +150,9 @@ void loop() {
 			button_clicked = true;
 			if (cursor_child < current_menu->children_count) {
 				current_menu = current_menu->children[cursor_child];
+				OLED_reset();
+				current_menu->on_click();
+				current_menu = current_menu->parent;
 				} else {
 				// go back
 				current_menu = current_menu->parent;
@@ -187,6 +200,50 @@ void loop() {
 				} else {
 				printf("Back");
 			}
+		}
+	}
+}
+
+void play_game(){
+
+	// signal start of game
+	CAN_standard_message_t msg;
+	msg.id = 5;
+	msg.dlc = 0;
+	CAN_send(msg);
+	
+	while(1){
+		CAN_standard_message_t msg;
+		msg.id = 13;
+		msg.rtr = 0;
+		msg.dlc = 3;
+		
+		pos_t joystick_pos = read_joystick_position();
+		bool button_pressed = read_button(JOYSTICK);
+		printf("x: %d  y: %d button: %d\n\r", joystick_pos.x, joystick_pos.y, button_pressed);
+		msg.data[0] = joystick_pos.x + 100;
+		msg.data[1] = joystick_pos.y + 100;
+		msg.data[2] = button_pressed;
+		
+		CAN_send(msg);
+		
+		CAN_standard_message_t recv_msg = CAN_receive();
+		uint32_t score = (recv_msg.data[3] << 3 | recv_msg.data[2] << 2 | recv_msg.data[1] << 1 | recv_msg.data[0]);
+		if (recv_msg.id == 1) {
+			stdout = &OLED_STREAM;
+			OLED_clear_line(0);
+			printf("GAME OVER");
+			OLED_goto_line(1);
+			printf("FINAL SCORE: %d", score);
+			stdout = &UART_STREAM;
+			_delay_ms(5000);
+			return;
+		} else {
+			printf("Score: %d\n\r", score);
+			stdout = &OLED_STREAM;
+			OLED_clear_line(0);
+			printf("Score: %d", score);
+			stdout = &UART_STREAM;
 		}
 	}
 }
@@ -240,21 +297,7 @@ int main(void) {
 	
 	printf("I sent id: %d data: %d\n\r", msg.id, msg.data[0]);
 	CAN_send(msg);*/
-	while(1){
-		CAN_standard_message_t msg;
-		msg.id = 13;
-		msg.rtr = 0;
-		msg.dlc = 3;
-		
-		pos_t joystick_pos = read_joystick_position();
-		bool button_pressed = read_button(JOYSTICK);
-		printf("x: %d  y: %d button: %d\n\r", joystick_pos.x, joystick_pos.y, button_pressed);
-		msg.data[0] = joystick_pos.x + 100;
-		msg.data[1] = joystick_pos.y + 100;
-		msg.data[2] = button_pressed;
-		
-		CAN_send(msg);
-	}
+
 	
 	
 	/*

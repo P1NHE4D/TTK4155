@@ -24,6 +24,7 @@
 uint8_t joystick_position_x;
 uint8_t joystick_position_y;
 bool button_pressed;
+uint16_t can_msg_id;
 
 
 /**
@@ -68,6 +69,7 @@ void CAN0_Handler( void )
 		if (message.data_length != 2) {
 			if (DEBUG_INTERRUPT)printf("Message is not exactly 2 long! Probably not joystick position!\n\r");
 		}
+		can_msg_id = message.id;
 		joystick_position_x = message.data[0];
 		joystick_position_y = message.data[1];
 		button_pressed = message.data[2];
