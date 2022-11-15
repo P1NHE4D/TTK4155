@@ -15,28 +15,10 @@
 #include "drivers/can_interrupt.h"
 #include "drivers/dac.h"
 #include "drivers/timer.h"
+#include "drivers/motor.h"
+#include "drivers/pid_interrupt.h"
 
 
-int16_t read_encoder() {
-	// set OE to low
-	PIOD->PIO_CODR |= PIO_CODR_P0;
-	// set SEL to loooooow
-	PIOD->PIO_CODR |= PIO_CODR_P2;
-	// wait 20 microseconds
-	for(int i = 0; i < 10000; i++) {}
-	// read MJ2 high byte
-	uint8_t encoder_high_byte = (PIOC->PIO_PDSR & (PIO_PDSR_P1 | PIO_PDSR_P2 | PIO_PDSR_P3 | PIO_PDSR_P4 | PIO_PDSR_P5 | PIO_PDSR_P6 | PIO_PDSR_P7 | PIO_PDSR_P8)) >> 1;
-	// set SEL to high
-	PIOD->PIO_SODR |= PIO_SODR_P2;
-	// wait 20 microseconds
-	for(int i = 0; i < 10000; i++) {}
-	// read MJ2 low byte
-	uint8_t encoder_low_byte = (PIOC->PIO_PDSR & (PIO_PDSR_P1 | PIO_PDSR_P2 | PIO_PDSR_P3 | PIO_PDSR_P4 | PIO_PDSR_P5 | PIO_PDSR_P6 | PIO_PDSR_P7 | PIO_PDSR_P8)) >> 1;
-	// set to OE to HIGH
-	PIOD->PIO_SODR |= PIO_SODR_P0;
-	
-	return (encoder_high_byte << 8) | encoder_low_byte;
-}
 
 
 int main(void)
@@ -166,9 +148,10 @@ int main(void)
 		/* Replace with your application code */
 		uint32_t score = 0;
 		uint8_t thr = 2000;
-		uint8_t cycle_thr = 1000;
+		uint8_t cycle_thr = 10;
 		
 		uint32_t blocked_cycles = 0;
+		calibrate_motor();
 		
 		for (int i = 0;; i++) {
 			if (button_pressed) {
@@ -176,14 +159,15 @@ int main(void)
 			} else {
 				PIOD->PIO_SODR |= PIO_SODR_P3;
 			}
-			int16_t encoder_val = read_encoder();
-			printf("Encoder val: %d\n\r", encoder_val);
+			current_encoder_value = read_encoder();
+			//printf("Encoder val: %d\n\r", encoder_val);
 			
 			// read joystick position from global
 			// variable (set by interrupt) and modify
 			// duty cycle
 			uint8_t duty_cycle_e2 = ((200 - joystick_position_x) / (200/(21-9))) + 9;
 			pwm_set_duty_cycle(duty_cycle_e2);
+			
 			
 			
 			// hacky hacky hacky ho, control trakc thingy with joystick_y
@@ -197,7 +181,7 @@ int main(void)
 				// right
 				speed = middle - joystick_position_y;
 				PIOD->PIO_SODR |= PIO_SODR_P10;
-			}				
+			}			
 			if (speed < 20) {
 				PIOD->PIO_CODR |= PIO_CODR_P9;
 			} else {
@@ -205,6 +189,12 @@ int main(void)
 			}
 
 			dac_convert((speed + 55) << 4);
+			
+			
+			// set direction and speed from motor_speed (which is signed)
+			// uint16_t motor_actuation = motor_output;
+			// printf("actuation: %d\n\r");
+			// dac_convert(motor_actuation);
 
 			
 			uint16_t result = adc_read();
@@ -216,9 +206,10 @@ int main(void)
 			}
 			
 			if (blocked_cycles < cycle_thr) {
-				if (i % 100000 == 0) {
+				if (i % 1000 == 0) {
 					score += 1;
-					printf("score: %d \n\r", score);	
+					printf("score: %d \n\r", score);
+					printf("adc is %d\n\r", result);
 				}
 			} else {
 				printf("adc is %d\n\r", result);

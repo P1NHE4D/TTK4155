@@ -5,7 +5,8 @@
  *  Author: thomahl
  */ 
 
-#include "sam.h"
+#include <sam.h>
+#include "dac.h"
 
 void dac_init() {
 	// enable the clock of the "DAC Controller" peripheral,
