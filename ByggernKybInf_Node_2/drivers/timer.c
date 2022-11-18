@@ -15,9 +15,7 @@ void timer_init() {
 	
 	// enable timer
 	REG_TC0_CCR0 |= (TC_CCR_CLKEN | TC_CCR_SWTRG);
-	
-	/* order could be wrong below... */
-	
+		
 	// set clock mode to MCK/128 & "RC Compare Trigger Enable"
 	REG_TC0_CMR0 |= TC_CMR_TCCLKS_TIMER_CLOCK4 | TC_CMR_CPCTRG;
 	

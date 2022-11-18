@@ -67,13 +67,10 @@ uint8_t read_slider(channel_t slider) {
 }
 
 bool read_button(button_t button) {
-    // TODO: check if correct
     switch (button) {
         case LEFT_BUTTON:
-			// TODO choose a pin
 			return (PINB & (1 << PINB2));
         case RIGHT_BUTTON:
-			// TODO choose a pin
 			return (PINB & (1 << PINB1));
         case JOYSTICK:
             return !(PINB & (1 << PINB0));

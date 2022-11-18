@@ -95,9 +95,8 @@ CAN_standard_message_t CAN_receive() {
 	}
 	
 	free(ptr_rx_buffer);
-	
-	// TODO is this needed? why do we sometimes read the previously written message?
-	// clear CANINTF.RX0IF bit to indicate the buffer has been read
+
+	// clear RX0IF and RX1IF (which is what we check at the top by reading rx status)	
 	mcp2515_bit_modify(
 		MCP_CANINTF,
 		0b11,

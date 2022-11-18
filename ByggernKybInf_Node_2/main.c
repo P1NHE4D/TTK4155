@@ -52,9 +52,11 @@ int main(void)
 	
 	// Appears as com10 in putty, with baud rate 9600, stop bits 2, parity None
 	
+	configure_uart();
+	
 	// needs to happen after uart, since there is debug output
 	dac_init();
-	configure_uart();
+	
 	timer_init();
 
 	printf("Starting...\n\r");
@@ -86,23 +88,7 @@ int main(void)
 	
 	/*  PIN enable register */
 	PIOC->PIO_PER |= (PIO_PER_P1 | PIO_PER_P2 | PIO_PER_P3 | PIO_PER_P4 | PIO_PER_P5 | PIO_PER_P6 | PIO_PER_P7 | PIO_PER_P8);
-	
-	/*
-	
-	// Set Output Data Register
-	PIOD->PIO_SODR |= (PIO_SODR_P9 | PIO_SODR_P10);
-	
-	uint16_t value_to_convert = pow(2, 12) - 1;
-	
-	PIOD->PIO_CODR |= PIO_CODR_P10;
-	for (int i = 0; i < 100000; i++) {
-		dac_convert(value_to_convert);
-	}
-	PIOD->PIO_CODR |= PIO_CODR_P9;
-	//dac_convert(value_to_convert);
-	//dac_convert(value_to_convert);
-	*/
-	
+		
 	/*
 	 * Build CAN_BR
 	 */
@@ -127,7 +113,6 @@ int main(void)
 		| ((smp     & 0b1)       << 24)
 		;
 		
-	// can_br = 0x00290165;
 	int status = can_init_def_tx_rx_mb(can_br);
 	if (status != 0) {
 		uart_putchar('b');
@@ -149,7 +134,7 @@ uint16_t min(uint16_t a, uint16_t b) {
 }
 
 void motor_control_bang_bang() {
-	// hacky hacky hacky ho, control trakc thingy with joystick_y
+	// hacky hacky hacky ho, control track thingy with joystick_y
 	uint8_t middle = 100;
 	uint16_t speed;
 	if (joystick_position_y > middle) {
@@ -206,7 +191,7 @@ void play_game() {
 	for (int i = 0;; i++) {
 		if (button_pressed) {
 			PIOD->PIO_CODR |= PIO_CODR_P3;
-			} else {
+		} else {
 			PIOD->PIO_SODR |= PIO_SODR_P3;
 		}
 		current_encoder_value = read_encoder();
@@ -227,7 +212,7 @@ void play_game() {
 		
 		if (result > thr) {
 			blocked_cycles = 0;
-			} else {
+		} else {
 			blocked_cycles += 1;
 		}
 		
@@ -242,7 +227,7 @@ void play_game() {
 				printf("score: %d \n\r", score);
 				printf("adc is %d\n\r", result);
 			}
-			} else {
+		} else {
 			printf("adc is %d\n\r", result);
 			printf("u suck, u got %d points \n\r", score);
 			can_msg.id = 1;

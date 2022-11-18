@@ -34,10 +34,6 @@ void mcp2515_init() {
 	}
 	stdout = &UART_STREAM;
 	
-	// TA har 3 og 41 (:
-	// delte opp i 16
-	// proparg 1
-	
 	// set CAN bit timings (while we are in configuration mode)
 
 	// cnf1
@@ -52,8 +48,8 @@ void mcp2515_init() {
 
 	// cnf3
 	uint8_t sof = 0;     // "If CANCTRL.CLKEN = 0, Bit is don't care"
-	uint8_t wakfil = 0;  // TODO what is this?
-	uint8_t phseg2 = 3;  // (TA: 5) TODO what is this?
+	uint8_t wakfil = 0;  //
+	uint8_t phseg2 = 3;  // (TA: 5)
 
 	uint8_t cnf1 = 0
 		| ((sjw & 0b11)     << 6)
@@ -71,25 +67,12 @@ void mcp2515_init() {
 		| ((sof & 0b1)         << 7)
 		| ((wakfil & 0b1)      << 6)
 		| ((phseg2 & 0b111)    << 0)
-		;
-	
-	// set cnf1, cnf2, cnf3 in mcp2515
-	// TODO is this OK? no. Go away.
-	
+		;	
 	
 	mcp2515_write(MCP_CNF1, &cnf1, 1);
 	mcp2515_write(MCP_CNF2, &cnf2, 1);
 	mcp2515_write(MCP_CNF3, &cnf3, 1);
-	
-	/*
-	uint8_t cnf1_ta = 0b0000011;
-	mcp2515_write(MCP_CNF1, &cnf1_ta, 1);
-	uint8_t cnf2_ta = 0b10110001;
-	mcp2515_write(MCP_CNF2, &cnf2_ta, 1);
-	uint8_t cnf3_ta = 0b00000101;
-	mcp2515_write(MCP_CNF3, &cnf3_ta, 1);
-	*/
-	
+		
 	uint8_t* value_cnf1 = mcp2515_read(MCP_CNF1, 1);
 	uint8_t* value_cnf2 = mcp2515_read(MCP_CNF2, 1);
 	uint8_t* value_cnf3 = mcp2515_read(MCP_CNF3, 1);
