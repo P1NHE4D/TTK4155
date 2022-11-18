@@ -19,7 +19,8 @@
 #include "drivers/pid_interrupt.h"
 
 
-
+uint16_t max_motor_actuation = pow(2, 12) - 1;
+bool pid_motor_control_enabled = false;
 
 int main(void)
 {
@@ -140,14 +141,67 @@ int main(void)
 	}
 }
 
+uint16_t min(uint16_t a, uint16_t b) {
+	if (a < b) {
+		return a;
+	}
+	return b;
+}
+
+void motor_control_bang_bang() {
+	// hacky hacky hacky ho, control trakc thingy with joystick_y
+	uint8_t middle = 100;
+	uint16_t speed;
+	if (joystick_position_y > middle) {
+		// left
+		speed = joystick_position_y - middle;
+		PIOD->PIO_CODR |= PIO_CODR_P10;
+	} else {
+		// right
+		speed = middle - joystick_position_y;
+		PIOD->PIO_SODR |= PIO_SODR_P10;
+	}
+	if (speed < 20) {
+		PIOD->PIO_CODR |= PIO_CODR_P9;
+	} else {
+		PIOD->PIO_SODR |= PIO_SODR_P9;
+	}
+
+	dac_convert((speed + 55) << 4);
+}
+
+void motor_control_pid() {
+	/* 
+	 set direction and speed from motor_speed (which is signed)
+	 */
+		
+	uint16_t unclamped_motor_actuation = abs(motor_output); // todo: scale and whatever
+	uint16_t clamped_motor_actuation = min(unclamped_motor_actuation, max_motor_actuation);
+		
+	if (motor_output > 0) {
+		// left
+		PIOD->PIO_CODR |= PIO_CODR_P10;
+	} else {
+		// right
+		PIOD->PIO_SODR |= PIO_SODR_P10;
+	}
+		
+	dac_convert(clamped_motor_actuation);
+}
+
 void play_game() {
 	/* Replace with your application code */
 	uint32_t score = 0;
 	uint8_t thr = 2000;
 	uint8_t cycle_thr = 10;
+	uint16_t max_motor_actuation = pow(2, 12)-1;
+
 	
 	uint32_t blocked_cycles = 0;
-	calibrate_motor();
+	
+	if (pid_motor_control_enabled) {
+		calibrate_motor();
+	}
 	
 	for (int i = 0;; i++) {
 		if (button_pressed) {
@@ -156,7 +210,6 @@ void play_game() {
 			PIOD->PIO_SODR |= PIO_SODR_P3;
 		}
 		current_encoder_value = read_encoder();
-		//printf("Encoder val: %d\n\r", encoder_val);
 		
 		// read joystick position from global
 		// variable (set by interrupt) and modify
@@ -164,34 +217,11 @@ void play_game() {
 		uint8_t duty_cycle_e2 = ((200 - joystick_position_x) / (200/(21-9))) + 9;
 		pwm_set_duty_cycle(duty_cycle_e2);
 		
-		
-		
-		// hacky hacky hacky ho, control trakc thingy with joystick_y
-		uint8_t middle = 100;
-		uint16_t speed;
-		if (joystick_position_y > middle) {
-			// left
-			speed = joystick_position_y - middle;
-			PIOD->PIO_CODR |= PIO_CODR_P10;
-			} else {
-			// right
-			speed = middle - joystick_position_y;
-			PIOD->PIO_SODR |= PIO_SODR_P10;
+		if (pid_motor_control_enabled) {
+			motor_control_pid();
+		} else {
+			motor_control_bang_bang();
 		}
-		if (speed < 20) {
-			PIOD->PIO_CODR |= PIO_CODR_P9;
-			} else {
-			PIOD->PIO_SODR |= PIO_SODR_P9;
-		}
-
-		dac_convert((speed + 55) << 4);
-		
-		
-		// set direction and speed from motor_speed (which is signed)
-		// uint16_t motor_actuation = motor_output;
-		// printf("actuation: %d\n\r");
-		// dac_convert(motor_actuation);
-
 		
 		uint16_t result = adc_read();
 		

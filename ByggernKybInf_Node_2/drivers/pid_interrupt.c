@@ -9,7 +9,7 @@
 #include "can_interrupt.h"
 #include "motor.h"
 
-const double kp = 0.1;
+const double kp = 0.75;
 const double ki = 0.1;
 const double kd = 0;
 int32_t total_err = 0;

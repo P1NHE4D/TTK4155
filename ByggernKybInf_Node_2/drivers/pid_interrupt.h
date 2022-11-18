@@ -9,7 +9,7 @@
 #ifndef PID_INTERRUPT_H_
 #define PID_INTERRUPT_H_
 
-extern double motor_output;
+extern int32_t motor_output;
 
 
 #endif /* PID_INTERRUPT_H_ */

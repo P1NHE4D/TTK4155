@@ -26,11 +26,12 @@ int16_t calibrate_motor() {
 	
 	int16_t prev;
 	int same_count = 0;
-	int same_thr = 500;
+	int same_thr = 100;
+	int buffer = 50;
 	
 	while (1) {
 		int16_t curr = read_encoder();
-		if (curr == prev) {
+		if (abs(curr - prev) <= buffer) {
 			same_count += 1;
 		} else {
 			same_count = 0;
@@ -56,7 +57,7 @@ int16_t calibrate_motor() {
 	
 	while (1) {
 		int16_t curr = read_encoder();
-		if (curr == prev) {
+		if (abs(curr - prev) <= buffer) {
 			same_count += 1;
 		} else {
 			same_count = 0;
