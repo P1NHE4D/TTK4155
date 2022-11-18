@@ -247,10 +247,4 @@ int main(void) {
 	
 	
 	loop();
-	
-	/*
-	Exercise 3 task 5:
-		Cutoff frequency: 795.8hz (using https://www.omnicalculator.com/physics/low-pass-filter, using R = 2000 Omh, C = 100 nF)
-		Slope at cutoff frequency: ?
-	*/
 }
