@@ -72,10 +72,15 @@ void CAN_send(CAN_standard_message_t msg) {
 CAN_standard_message_t CAN_receive() {
 	// dumb implementation for now: just return whatever is in the rx0 buffer
 		
+	CAN_standard_message_t received_msg;
 	
+	uint8_t status = mcp2515_rx_status();
+	if (!(status & (0b11 << 6))) {
+		received_msg.id = 0;
+		return received_msg;
+	}
 	uint8_t* ptr_rx_buffer = mcp2515_read(MCP_RXB0CTRL, 14);
 	
-	CAN_standard_message_t received_msg;
 		
 	// SID 10 to 3 are in TXBnSIDH bits 7-0, and SID 2-0 are in TXBnSIDL 7-5
 	received_msg.id = (ptr_rx_buffer[1] << 3)|(ptr_rx_buffer[2] >> 5);
@@ -95,7 +100,7 @@ CAN_standard_message_t CAN_receive() {
 	// clear CANINTF.RX0IF bit to indicate the buffer has been read
 	mcp2515_bit_modify(
 		MCP_CANINTF,
-		1,
+		0b11,
 		0
 	);
 	

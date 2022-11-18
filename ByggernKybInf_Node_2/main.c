@@ -195,7 +195,7 @@ void play_game() {
 	uint8_t thr = 2000;
 	uint8_t cycle_thr = 10;
 	uint16_t max_motor_actuation = pow(2, 12)-1;
-
+	CAN_MESSAGE can_msg;
 	
 	uint32_t blocked_cycles = 0;
 	
@@ -231,7 +231,6 @@ void play_game() {
 			blocked_cycles += 1;
 		}
 		
-		CAN_MESSAGE can_msg;
 		can_msg.data[3] = score >> 3;
 		can_msg.data[2] = score >> 2;
 		can_msg.data[1] = score >> 1;
